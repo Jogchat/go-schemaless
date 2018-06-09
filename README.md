@@ -3,7 +3,7 @@ This is an open-source, MIT-licensed implementation of Uber's Schemaless
 
 All code is in Golang, no exceptions.
 
-DATABASE SUPPORT
+**DATABASE SUPPORT**
 
 For learning or other:
 
@@ -19,14 +19,14 @@ For potentially serious usage:
 	* Postgres
 
 
-ADDING SUPPORT FOR ADDITIONAL DATABASES / STORAGES
+**ADDING SUPPORT FOR ADDITIONAL DATABASES / STORAGES**
 
 I will be more than happy to accept well-tested, high-quality implementations
 for other potential storage backends. If you need support for something (but
 don't see it here) then please file an issue to open discussion up. PRs
 welcome.
 
-SETTING UP FOR DEVELOPMENT AND RUNNING TESTS
+**SETTING UP FOR DEVELOPMENT AND RUNNING TESTS**
 
 1. Install MySQL, postgres, and rqlite, setup users on MySQL and Postgres.
 
@@ -47,19 +47,19 @@ for MySQL and Postgres, this should pass all tests.
 Any test cases should be idempotent - they should not result in errors on
 subsequent runs due to hard-coded row keys.
 
-DISCLAIMER
+**DISCLAIMER**
 
 I do not work for Uber Technologies. Everything has been sourced from their
 materials that they've released on the subject matter (which I am extremely
 gracious for): 
 
-VIDEOS
+**VIDEOS**
 
 "Taking Storage for a Ride With Uber", https://www.youtube.com/watch?v=Dg76cNaeB4s (30 mins)
 
 "GOTO 2016 • Taking Storage for a Ride", https://www.youtube.com/watch?v=kq4gp90QUcs (1 hour)
 
-ARTICLES
+**ARTICLES*
 
 "Designing Schemaless, Uber Engineering’s Scalable Datastore Using MySQL"
 
@@ -79,7 +79,7 @@ also derived from https://github.com/dgryski/go-shardedkv
 
 My sincere thanks to Damian Gryski for open-sourcing the above package.
 
-OTHER RESOURCES
+**OTHER RESOURCES**
 
 FriendFeed: https://backchannel.org/blog/friendfeed-schemaless-mysql
 
@@ -87,11 +87,11 @@ Pinterest: https://engineering.pinterest.com/blog/sharding-pinterest-how-we-scal
 
 Martin Fowler's slides on Schemaless Data Structures: https://martinfowler.com/articles/schemaless/
 
-OTHER OPEN-SOURCE IMPLEMENTATIONS
+**OTHER OPEN-SOURCE IMPLEMENTATIONS**
 
 https://github.com/hoteltonight/shameless - Schemaless in Ruby
 
-TO LOGIN TO MYSQL SERVER
+**TO LOGIN TO MYSQL SERVER**
 
 Connect to MySQL node
 
@@ -102,3 +102,36 @@ Connect to MySQL server
     mysql -u root -p
     
 Have fun
+
+**DESIGN**
+
+BLOB DESIGN
+
+user blob
+
+    {
+        "id": dummy_id, // uuid
+        "username": "dummy_username",
+        "email": "dummy_email",
+        "password": "dummy_password",
+        "activate": False // boolean
+    }
+    
+company blob
+    
+    {
+        "id": dummy_id // uuid
+        "category": "dummy_category",
+        "domain": "dummy_domain",
+        "name": "dummy_name"
+    }
+    
+school blob
+    
+    {
+        "id": dummy_id // uuid
+        "category": "dummy_category"
+        "domain": "dummy_domain"
+        "name": "dummy_name"
+    }
+    
