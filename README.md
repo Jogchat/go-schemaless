@@ -104,8 +104,6 @@ Connect to MySQL server
 Have fun
 
 ## How to set up Ubuntu 16.04 with schemaless-go server
-
-````
 sudo apt-get update
 sudo apt-get -y upgrade
 sudo curl -O https://dl.google.com/go/go1.10.3.linux-amd64.tar.gz
@@ -114,13 +112,8 @@ sudo vim ~/.profile
 add at end of file:
 export PATH=$PATH:/usr/local/go/bin
 source ~/.profile
-```
-
 ## DESIGN
-
 BLOB DESIGN
-
-```
 user blob
 
     {
@@ -148,4 +141,4 @@ school blob
         "domain": "dummy_domain"
         "name": "dummy_name"
     }
-```    
+
