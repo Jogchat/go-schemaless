@@ -114,31 +114,23 @@ export PATH=$PATH:/usr/local/go/bin
 source ~/.profile
 ## DESIGN
 BLOB DESIGN
-user blob
-
-    {
+user blob{
         "id": dummy_id, // uuid
         "username": "dummy_username",
         "email": "dummy_email",
         "password": "dummy_password",
         "activate": False // boolean
-    }
-    
-company blob
-    
-    {
+}
+company blob{
         "id": dummy_id // uuid
         "category": "dummy_category",
         "domain": "dummy_domain",
         "name": "dummy_name"
-    }
-    
-school blob
-    
-    {
+}
+school blob{
         "id": dummy_id // uuid
         "category": "dummy_category"
         "domain": "dummy_domain"
         "name": "dummy_name"
-    }
+}
 
