@@ -91,3 +91,14 @@ OTHER OPEN-SOURCE IMPLEMENTATIONS
 
 https://github.com/hoteltonight/shameless - Schemaless in Ruby
 
+TO LOGIN TO MYSQL SERVER
+
+Connect to MySQL node
+
+	ssh root@165.227.25.43
+
+Connect to MySQL server
+    
+    mysql -u root -p
+    
+Have fun
