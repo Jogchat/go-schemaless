@@ -3,16 +3,16 @@
     {
       "ip": "165.227.25.43",
       "port": 4000,
-      "database": "jogchat",
+      "database": "jogchat0",
       "user": "root",
-      "password": "Umiuni_jogchat_schemaless_2018@"
+      "password": "Umiuni_jogchat_schemales_2018@"
     },
     {
       "ip": "138.197.103.33",
       "port": 4000,
-      "db": "jogchat",
+      "db": "jogchat1",
       "user": "root",
-      "password": "Umiuni_jogchat_schemaless_2018@"
+      "password": "Umiuni_jogchat_schemales_2018@"
     }
   ]
 }

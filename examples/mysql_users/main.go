@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 
-	"fmt"
 	"github.com/dgryski/go-metro"
 	"github.com/icrowley/fake"
 	"code.jogchat.internal/go-schemaless"
@@ -12,7 +11,10 @@ import (
 	st "code.jogchat.internal/go-schemaless/storage/mysql"
 	"github.com/satori/go.uuid"
 	"os"
-	"strconv"
+	//"log"
+	"io/ioutil"
+	"encoding/json"
+	"fmt"
 )
 
 func newBackend(user, pass, host, port, schemaName string) *st.Storage {
@@ -36,14 +38,15 @@ func newBackend(user, pass, host, port, schemaName string) *st.Storage {
 	return m
 }
 
-func getShards(user, pass, host, port, prefix string) []core.Shard {
+func getShards(config map[string][]map[string]string) []core.Shard {
 	var shards []core.Shard
-	nShards := 4
+	hosts := config["hosts"]
 
-	for i := 0; i < nShards; i++ {
-		schemaName := prefix + strconv.Itoa(i)
-		// TODO(rbastic): needs to map to a shard host.
-		shards = append(shards, core.Shard{Name: schemaName, Backend: newBackend(user, pass, host, port, schemaName)})
+	for _, host := range hosts {
+		shard := core.Shard{
+			Name: host["database"],
+			Backend: newBackend(host["user"], host["password"], host["ip"], host["port"], host["database"])}
+		shards = append(shards, shard)
 	}
 
 	return shards
@@ -61,29 +64,20 @@ func fakeUserJSON() string {
 }
 
 func main() {
-	user := os.Getenv("SQLUSER")
-	if user == "" {
-		panic("Please specify SQLUSER=...")
+	jsonFile, err := os.Open("config/config.json")
+	if err != nil {
+		fmt.Println(err)
 	}
-	pass := os.Getenv("SQLPASS")
-	if pass == "" {
-		panic("Please specify SQLPASS=...")
-	}
-	// TODO: SQLHOST should end up being equivalent to the computed backend label
-	// For this demonstrative example, we assume you are testing all shard-schemas
-	// on a single MySQL node.
-	host := os.Getenv("SQLHOST")
-	if host == "" {
-		panic("Please specify SQLHOST=...")
-	}
-	port := os.Getenv("SQLPORT")
-	if port == "" {
-		port = "3306"
-	} else {
-		fmt.Println("Using port", port)
+	defer jsonFile.Close()
+	bytes, err := ioutil.ReadAll(jsonFile)
+	if err != nil {
+		fmt.Println(err)
 	}
 
-	shards := getShards(user, pass, host, port, "user")
+	var config map[string][]map[string]string
+	json.Unmarshal(bytes, &config)
+
+	shards := getShards(config)
 	kv := schemaless.New().WithSource(shards)
 	defer kv.Destroy(context.TODO())
 
