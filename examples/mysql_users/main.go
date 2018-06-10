@@ -6,6 +6,7 @@ import (
 	"github.com/dgryski/go-metro"
 	"github.com/icrowley/fake"
 	"code.jogchat.internal/go-schemaless"
+	"code.jogchat.internal/go-schemaless/utils"
 	"code.jogchat.internal/go-schemaless/core"
 	st "code.jogchat.internal/go-schemaless/storage/mysql"
 	"github.com/satori/go.uuid"
@@ -16,7 +17,6 @@ import (
 	"fmt"
 	"time"
 	"code.jogchat.internal/go-schemaless/models"
-	"log"
 )
 
 func newBackend(user, pass, host, port, schemaName string) *st.Storage {
@@ -67,14 +67,10 @@ func fakeUserJSON() string {
 
 func main() {
 	jsonFile, err := os.Open("config/config.json")
-	if err != nil {
-		fmt.Println(err)
-	}
+	utils.CheckErr(err)
 	defer jsonFile.Close()
 	bytes, err := ioutil.ReadAll(jsonFile)
-	if err != nil {
-		fmt.Println(err)
-	}
+	utils.CheckErr(err)
 
 	var config map[string][]map[string]string
 	json.Unmarshal(bytes, &config)
@@ -97,16 +93,21 @@ func main() {
 	dataStore := schemaless.New().WithSource(shards)
 	defer dataStore.Destroy(context.TODO())
 
+	rowKey := newUUID()
+	colKey := "schools"
 	refKey := time.Now().UnixNano()
 	blob, err := json.Marshal(map[string]string {
 		"category": "university",
 		"domain": "illinois.edu",
 		"name": "UIUC",
 	})
-	if err != nil {
-		log.Fatal(err)
-	}
-	dataStore.PutCell(context.TODO(), newUUID(), "schools", time.Now().UnixNano(),
-		models.Cell{RefKey: refKey, Body: blob})
+	utils.CheckErr(err)
 
+	err = dataStore.PutCell(context.TODO(), rowKey, colKey, refKey,
+		models.Cell{RefKey: refKey, Body: blob})
+	utils.CheckErr(err)
+
+	cell, _, err := dataStore.GetCellLatest(context.TODO(), rowKey, colKey)
+	utils.CheckErr(err)
+	fmt.Println(cell.String())
 }

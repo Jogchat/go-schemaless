@@ -7,7 +7,7 @@ import (
 
 	ch "github.com/dgryski/go-shardedkv/choosers/chash"
 	"code.jogchat.internal/go-schemaless/models"
-	st "code.jogchat.internal/go-schemaless/storage/memory"
+	st "code.jogchat.internal/go-schemaless/storage/mysql"
 )
 
 func TestShardedkv(t *testing.T) {
