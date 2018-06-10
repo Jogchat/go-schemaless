@@ -1,0 +1,18 @@
+{
+  "hosts": [
+    {
+      "ip": "165.227.25.43",
+      "port": 4000,
+      "database": "jogchat",
+      "user": "root",
+      "password": "Umiuni_jogchat_schemaless_2018@"
+    },
+    {
+      "ip": "138.197.103.33",
+      "port": 4000,
+      "db": "jogchat",
+      "user": "root",
+      "password": "Umiuni_jogchat_schemaless_2018@"
+    }
+  ]
+}
