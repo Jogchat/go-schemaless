@@ -220,3 +220,14 @@ The output should list MySQL port 3306 and the STATe should be open. If the MySQ
 
 Summary : MySQL Remote Access Ubuntu Server 16.04.
 In this tutorial we learned how to enable Remote Access to MySQL Server in Ubuntu 16.04.
+
+```
+mysql> SHOW GRANTS;
++---------------------------------------------------------------------+
+| Grants for root@localhost                                           |
++---------------------------------------------------------------------+
+| GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' WITH GRANT OPTION |
+| GRANT PROXY ON ''@'' TO 'root'@'localhost' WITH GRANT OPTION        |
++---------------------------------------------------------------------+
+2 rows in set (0.00 sec)
+```
