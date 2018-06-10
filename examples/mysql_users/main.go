@@ -12,7 +12,6 @@ import (
 	"io/ioutil"
 	"encoding/json"
 	"fmt"
-	"time"
 	"code.jogchat.internal/go-schemaless/models"
 )
 
@@ -87,12 +86,13 @@ func main() {
 
 	rowKey := newUUID().Bytes()
 	colKey := "school"
-	refKey := time.Now().UnixNano()
-	blob, err := json.Marshal(map[string]string {
-		"id": newUUID().String(),
+	refKey := int64(0)
+	blob, err := json.Marshal(map[string]interface{} {
+		"id": newUUID().Bytes(),
 		"category": "university",
 		"domain": "illinois.edu",
 		"name": "UIUC",
+		"activate": false,
 	})
 	utils.CheckErr(err)
 
