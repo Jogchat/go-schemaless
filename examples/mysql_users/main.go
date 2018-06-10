@@ -7,7 +7,6 @@ import (
 	"github.com/icrowley/fake"
 	"code.jogchat.internal/go-schemaless"
 	"code.jogchat.internal/go-schemaless/core"
-	"code.jogchat.internal/go-schemaless/models"
 	st "code.jogchat.internal/go-schemaless/storage/mysql"
 	"github.com/satori/go.uuid"
 	"os"
@@ -87,8 +86,4 @@ func main() {
 
 	// You decide the refKey's purpose. For example, it can
 	// be used as a record version number, or for sort-order.
-	for i := 0; i < 1000; i++ {
-		refKey := int64(i)
-		kv.PutCell(context.TODO(), newUUID(), "PII", refKey, models.Cell{RefKey: refKey, Body: fakeUserJSON()})
-	}
 }
