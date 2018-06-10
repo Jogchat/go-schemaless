@@ -149,4 +149,74 @@ school blob{
         "name": "dummy_name"
 }
 ```
+## How to Allow MySQL Remote Access in Ubuntu Server 16.04
+In this tutorial we are going to learn how to allow remote access to the MySQL server in Ubuntu Server. For the tutorial I am using Ubuntu Server 16.04, But you can use this on any previous version of Ubuntu Linux.
 
+Enable MySQL Server Remote Connection in Ubuntu
+By default MySQL Server on Ubuntu run on the local interface, This means remote access to the MySQL Server is not Allowed. To enable remote connections to the MySQL Server we need to change value of the bind-address in the MySQL Configuration File.
+
+```
+First, Open the /etc/mysql/mysql.conf.d/mysqld.cnf file (/etc/mysql/my.cnf in Ubuntu 14.04 and earlier versions).
+
+vim /etc/mysql/mysql.conf.d/mysqld.cnf
+```
+
+Under the [mysqld] Locate the Line,
+
+```
+bind-address            = 127.0.0.1
+```
+
+And change it to,
+
+```
+bind-address            = 0.0.0.0
+```
+
+How to Allow MySQL Remote Access in Ubuntu Server 16.04
+Then, Restart the Ubuntu MysQL Server.
+
+```
+systemctl restart mysql.service
+```
+
+Now Ubuntu Server will allow remote access to the MySQL Server, But still you need to configure MySQL users to allow access from any host.
+
+For example, when you create a MySQL user, you should allow access from any host.
+
+```
+CREATE USER 'username'@'%' IDENTIFIED BY 'password';
+```
+
+Or Allow from Specific IP Address,
+
+```
+CREATE USER 'username'@'192.168.1.100' IDENTIFIED BY 'password';
+```
+
+Troubleshoot Ubuntu MySQL Remote Access
+To make sure that, MySQL server listens on all interfaces, run the netstat command as follows.
+
+```
+netstat -tulnp | grep mysql
+```
+
+The output should show that MySQL Server running on the socket 0 0.0.0.0:3306 instead of 127.0.0.1:3306.
+
+MySQL Server running on the socket 0 0.0.0.0:3306
+You can also try to telnet to the MySQL port 3306 from a remote host. For example, if the IP Address of your Ubuntu Server is 192.168.1.10, Then from the remote host execute,
+
+```
+telnet 192.168.1.10 3306
+```
+
+You can also run the nmap command from a remote computer to check whether MySQL port 3306 is open to the remote host.
+
+```
+nmap 192.168.1.10
+```
+
+The output should list MySQL port 3306 and the STATe should be open. If the MySQL port 3306 not open, Then there is a firewall which blocks the port 3306.
+
+Summary : MySQL Remote Access Ubuntu Server 16.04.
+In this tutorial we learned how to enable Remote Access to MySQL Server in Ubuntu 16.04.
