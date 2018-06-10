@@ -231,3 +231,7 @@ mysql> SHOW GRANTS;
 +---------------------------------------------------------------------+
 2 rows in set (0.00 sec)
 ```
+To grant user remote access:
+```
+CREATE USER ‘root’@‘%’ IDENTIFIED BY 
+```
