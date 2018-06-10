@@ -274,10 +274,10 @@ CREATE TABLE schools(
 ```
 CREATE TABLE cell
 (
-    added_at         Integer PRIMARY KEY AUTO_INCREMENT,
+    added_at         BIGINT PRIMARY KEY AUTO_INCREMENT,
     row_key          BINARY(16) NOT NULL,
     column_name      VARCHAR(64) NOT NULL,
-    ref_key          Integer NOT NULL,
+    ref_key          BIGINT NOT NULL,
     body             BLOB,
     created_at       DATETIME DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT cell_idx UNIQUE(row_key, column_name,ref_key)
