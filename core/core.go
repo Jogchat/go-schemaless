@@ -4,22 +4,21 @@ import (
 	"context"
 	"code.jogchat.internal/go-schemaless/models"
 	"sync"
-	"github.com/satori/go.uuid"
 )
 
 // Storage is a key-value storage backend
 type Storage interface {
 	// GetCell the cell designated (row key, column key, ref key)
-	GetCell(ctx context.Context, rowKey uuid.UUID, columnKey string, refKey int64) (cell models.Cell, found bool, err error)
+	GetCell(ctx context.Context, rowKey []byte, columnKey string, refKey int64) (cell models.Cell, found bool, err error)
 
 	// GetCellLatest returns the latest value for a given rowKey and columnKey, and a bool indicating if the key was present
-	GetCellLatest(ctx context.Context, rowKey uuid.UUID, columnKey string) (cell models.Cell, found bool, err error)
+	GetCellLatest(ctx context.Context, rowKey []byte, columnKey string) (cell models.Cell, found bool, err error)
 
 	// PartitionRead returns 'limit' cells after 'location' from shard 'shard_no'
 	PartitionRead(ctx context.Context, partitionNumber int, location string, value interface{}, limit int) (cells []models.Cell, found bool, err error)
 
 	// PutCell inits a cell with given row key, column key, and ref key
-	PutCell(ctx context.Context, rowKey uuid.UUID, columnKey string, refKey int64, cell models.Cell) (err error)
+	PutCell(ctx context.Context, rowKey []byte, columnKey string, refKey int64, cell models.Cell) (err error)
 
 	// ResetConnection reinitializes the connection for the shard responsible for a key
 	ResetConnection(ctx context.Context, key string) error
@@ -72,7 +71,7 @@ func New(chooser Chooser, shards []Shard) *KVStore {
 	return kv
 }
 
-func (kv *KVStore) GetCell(ctx context.Context, rowKey uuid.UUID, columnKey string, refKey int64) (cell models.Cell, found bool, err error) {
+func (kv *KVStore) GetCell(ctx context.Context, rowKey []byte, columnKey string, refKey int64) (cell models.Cell, found bool, err error) {
 	var storage Storage
 	var migStorage Storage
 
@@ -80,10 +79,10 @@ func (kv *KVStore) GetCell(ctx context.Context, rowKey uuid.UUID, columnKey stri
 	defer kv.mu.Unlock()
 
 	if kv.migration != nil {
-		shard := kv.migration.Choose(rowKey.String())
+		shard := kv.migration.Choose(string(rowKey))
 		migStorage = kv.mstorages[shard]
 	}
-	shard := kv.continuum.Choose(rowKey.String())
+	shard := kv.continuum.Choose(string(rowKey))
 	storage = kv.storages[shard]
 
 	if migStorage != nil {
@@ -96,7 +95,7 @@ func (kv *KVStore) GetCell(ctx context.Context, rowKey uuid.UUID, columnKey stri
 	return storage.GetCell(ctx, rowKey, columnKey, refKey)
 }
 
-func (kv *KVStore) GetCellLatest(ctx context.Context, rowKey uuid.UUID, columnKey string) (cell models.Cell, found bool, err error) {
+func (kv *KVStore) GetCellLatest(ctx context.Context, rowKey []byte, columnKey string) (cell models.Cell, found bool, err error) {
 	var storage Storage
 	var migStorage Storage
 
@@ -104,7 +103,7 @@ func (kv *KVStore) GetCellLatest(ctx context.Context, rowKey uuid.UUID, columnKe
 	defer kv.mu.Unlock()
 
 	if kv.migration != nil {
-		shard := kv.migration.Choose(rowKey.String())
+		shard := kv.migration.Choose(string(rowKey))
 		migStorage = kv.mstorages[shard]
 	}
 
@@ -118,27 +117,27 @@ func (kv *KVStore) GetCellLatest(ctx context.Context, rowKey uuid.UUID, columnKe
 		}
 	}
 
-	shard := kv.continuum.Choose(rowKey.String())
+	shard := kv.continuum.Choose(string(rowKey))
 	storage = kv.storages[shard]
 
 	return storage.GetCellLatest(ctx, rowKey, columnKey)
 }
 
 // PutCell
-func (kv *KVStore) PutCell(ctx context.Context, rowKey uuid.UUID, columnKey string, refKey int64, cell models.Cell) error {
+func (kv *KVStore) PutCell(ctx context.Context, rowKey []byte, columnKey string, refKey int64, cell models.Cell) error {
 	var storage Storage
 
 	kv.mu.Lock()
 	defer kv.mu.Unlock()
 
 	if kv.migration != nil {
-		shard := kv.migration.Choose(rowKey.String())
+		shard := kv.migration.Choose(string(rowKey))
 		storage = kv.mstorages[shard]
 
 		return storage.PutCell(ctx, rowKey, columnKey, refKey, cell)
 	}
 
-	shard := kv.continuum.Choose(rowKey.String())
+	shard := kv.continuum.Choose(string(rowKey))
 	storage = kv.storages[shard]
 
 	return storage.PutCell(ctx, rowKey, columnKey, refKey, cell)

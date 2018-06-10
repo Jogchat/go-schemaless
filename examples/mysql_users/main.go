@@ -3,15 +3,12 @@ package main
 import (
 	"context"
 
-	"github.com/dgryski/go-metro"
-	"github.com/icrowley/fake"
 	"code.jogchat.internal/go-schemaless"
 	"code.jogchat.internal/go-schemaless/utils"
 	"code.jogchat.internal/go-schemaless/core"
 	st "code.jogchat.internal/go-schemaless/storage/mysql"
 	"github.com/satori/go.uuid"
 	"os"
-	//"log"
 	"io/ioutil"
 	"encoding/json"
 	"fmt"
@@ -54,15 +51,8 @@ func getShards(config map[string][]map[string]string) []core.Shard {
 	return shards
 }
 
-func hash64(b []byte) uint64 { return metro.Hash64(b, 0) }
-
 func newUUID() uuid.UUID {
 	return uuid.Must(uuid.NewV4())
-}
-
-func fakeUserJSON() string {
-	name := fake.FirstName() + " " + fake.LastName()
-	return "{\"name" + "\": \"" + name + "\"}"
 }
 
 func main() {
@@ -76,8 +66,9 @@ func main() {
 	json.Unmarshal(bytes, &config)
 
 	shards := getShards(config)
-	kv := schemaless.New().WithSource(shards)
-	defer kv.Destroy(context.TODO())
+
+	//kv := schemaless.New().WithSource(shards)
+	//defer kv.Destroy(context.TODO())
 
 	// We're going to demonstrate jump hash+metro hash with MySQL-backed
 	// storage. This example implements multiple shard schemas on a single
@@ -90,13 +81,15 @@ func main() {
 	//	refKey := int64(i)
 	//	kv.PutCell(context.TODO(), newUUID(), "PII", refKey, models.Cell{RefKey: refKey, Body: fakeUserJSON()})
 	//}
+
 	dataStore := schemaless.New().WithSource(shards)
 	defer dataStore.Destroy(context.TODO())
 
-	rowKey := newUUID()
-	colKey := "schools"
+	rowKey := newUUID().Bytes()
+	colKey := "school"
 	refKey := time.Now().UnixNano()
 	blob, err := json.Marshal(map[string]string {
+		"id": newUUID().String(),
 		"category": "university",
 		"domain": "illinois.edu",
 		"name": "UIUC",

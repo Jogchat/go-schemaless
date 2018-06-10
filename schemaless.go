@@ -7,22 +7,21 @@ import (
 	"code.jogchat.internal/go-schemaless/core"
 	"code.jogchat.internal/go-schemaless/models"
 	"sync"
-	"github.com/satori/go.uuid"
 )
 
 // Storage is a key-value storage backend
 type Storage interface {
 	// GetCell the cell designated (row key, column key, ref key)
-	GetCell(ctx context.Context, rowKey uuid.UUID, columnKey string, refKey int64) (cell models.Cell, found bool, err error)
+	GetCell(ctx context.Context, rowKey []byte, columnKey string, refKey int64) (cell models.Cell, found bool, err error)
 
 	// GetCellLatest returns the latest value for a given rowKey and columnKey, and a bool indicating if the key was present
-	GetCellLatest(ctx context.Context, rowKey uuid.UUID, columnKey string) (cell models.Cell, found bool, err error)
+	GetCellLatest(ctx context.Context, rowKey []byte, columnKey string) (cell models.Cell, found bool, err error)
 
 	// PartitionRead returns 'limit' cells after 'location' from shard 'shard_no'
 	PartitionRead(ctx context.Context, partitionNumber int, location string, value interface{}, limit int) (cells []models.Cell, found bool, err error)
 
 	// PutCell inits a cell with given row key, column key, and ref key
-	PutCell(ctx context.Context, rowKey uuid.UUID, columnKey string, refKey int64, cell models.Cell) (err error)
+	PutCell(ctx context.Context, rowKey []byte, columnKey string, refKey int64, cell models.Cell) (err error)
 
 	// ResetConnection reinitializes the connection for the shard responsible for a key
 	ResetConnection(ctx context.Context, key string) error
@@ -77,11 +76,11 @@ func New() *DataStore {
 	return &DataStore{}
 }
 
-func (ds *DataStore) GetCell(ctx context.Context, rowKey uuid.UUID, columnKey string, refKey int64) (cell models.Cell, found bool, err error) {
+func (ds *DataStore) GetCell(ctx context.Context, rowKey []byte, columnKey string, refKey int64) (cell models.Cell, found bool, err error) {
 	return ds.source.GetCell(ctx, rowKey, columnKey, refKey)
 }
 
-func (ds *DataStore) GetCellLatest(ctx context.Context, rowKey uuid.UUID, columnKey string) (cell models.Cell, found bool, err error) {
+func (ds *DataStore) GetCellLatest(ctx context.Context, rowKey []byte, columnKey string) (cell models.Cell, found bool, err error) {
 	return ds.source.GetCellLatest(ctx, rowKey, columnKey)
 }
 
@@ -90,7 +89,7 @@ func (ds *DataStore) PartitionRead(ctx context.Context, partitionNumber int, loc
 }
 
 // PutCell
-func (ds *DataStore) PutCell(ctx context.Context, rowKey uuid.UUID, columnKey string, refKey int64, cell models.Cell) error {
+func (ds *DataStore) PutCell(ctx context.Context, rowKey []byte, columnKey string, refKey int64, cell models.Cell) error {
 	return ds.source.PutCell(ctx, rowKey, columnKey, refKey, cell)
 }
 
