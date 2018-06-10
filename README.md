@@ -118,9 +118,9 @@ source ~/.profile
 ```
 ## 
 ```
-makedir gocode
-export GOPATH=$HOME/gocode
-cd gocode
+makedir go
+export GOPATH=$HOME/go
+cd go
 makedir code.jogchat.internal
 cd code.jogchat.internal
 git clone https://github.com/Jogchat/go_schemaless.git
@@ -235,3 +235,5 @@ To grant user remote access:
 ```
 CREATE USER 'root'@'%' IDENTIFIED BY 'password'
 ```
+
+
