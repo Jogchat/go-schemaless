@@ -105,7 +105,7 @@ func (s *Storage) GetCell(ctx context.Context, rowKey uuid.UUID, columnKey strin
 		resRowKey    uuid.UUID
 		resColName   string
 		resRefKey    int64
-		resBody      string
+		resBody      []byte
 		resCreatedAt *time.Time
 		rows         *sql.Rows
 	)
@@ -147,7 +147,7 @@ func (s *Storage) GetCellLatest(ctx context.Context, rowKey uuid.UUID, columnKey
 		resRowKey    uuid.UUID
 		resColName   string
 		resRefKey    int64
-		resBody      string
+		resBody      []byte
 		resCreatedAt *time.Time
 		rows         *sql.Rows
 	)
@@ -191,7 +191,7 @@ func (s *Storage) PartitionRead(ctx context.Context, partitionNumber int, locati
 		resRowKey    uuid.UUID
 		resColName   string
 		resRefKey    int64
-		resBody      string
+		resBody      []byte
 		resCreatedAt *time.Time
 
 		locationColumn string

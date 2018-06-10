@@ -14,6 +14,9 @@ import (
 	"io/ioutil"
 	"encoding/json"
 	"fmt"
+	"time"
+	"code.jogchat.internal/go-schemaless/models"
+	"log"
 )
 
 func newBackend(user, pass, host, port, schemaName string) *st.Storage {
@@ -91,4 +94,19 @@ func main() {
 	//	refKey := int64(i)
 	//	kv.PutCell(context.TODO(), newUUID(), "PII", refKey, models.Cell{RefKey: refKey, Body: fakeUserJSON()})
 	//}
+	dataStore := schemaless.New().WithSource(shards)
+	defer dataStore.Destroy(context.TODO())
+
+	refKey := time.Now().UnixNano()
+	blob, err := json.Marshal(map[string]string {
+		"category": "university",
+		"domain": "illinois.edu",
+		"name": "UIUC",
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	dataStore.PutCell(context.TODO(), newUUID(), "schools", time.Now().UnixNano(),
+		models.Cell{RefKey: refKey, Body: blob})
+
 }

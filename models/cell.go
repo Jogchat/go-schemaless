@@ -39,14 +39,14 @@ type Cell struct {
 	RowKey     uuid.UUID     // UUID
 	ColumnName string     // The actual column name for the individual Body blob
 	RefKey     int64      // for versioning or sorting cells in a list
-	Body       string     // Uber chose JSON inside MessagePack'd LZ4 blobs
+	Body       []byte     // Uber chose JSON inside MessagePack'd LZ4 blobs
 	CreatedAt  *time.Time `json:"omitempty"`
 }
 
 // NewCell constructs a Cell structure with the minimum parameters necessary:
 // a row key and column name (strings), a ref key (int64), and a body
 // ([]byte).
-func NewCell(rowKey uuid.UUID, columnName string, refKey int64, body string) Cell {
+func NewCell(rowKey uuid.UUID, columnName string, refKey int64, body []byte) Cell {
 	return Cell{RowKey: rowKey, ColumnName: columnName, RefKey: refKey, Body: body}
 }
 
