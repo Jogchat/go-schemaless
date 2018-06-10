@@ -233,5 +233,5 @@ mysql> SHOW GRANTS;
 ```
 To grant user remote access:
 ```
-CREATE USER ‘root’@‘%’ IDENTIFIED BY 
+CREATE USER 'root'@'%' IDENTIFIED BY 'password'
 ```
