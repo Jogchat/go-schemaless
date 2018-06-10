@@ -11,6 +11,7 @@ import (
 	"go.uber.org/zap"
 	"reflect"
 	"time"
+	"github.com/satori/go.uuid"
 )
 
 // Storage is a MySQL-backed storage.
@@ -98,10 +99,10 @@ func (s *Storage) WithDatabase(database string) *Storage {
 	return s
 }
 
-func (s *Storage) GetCell(ctx context.Context, rowKey string, columnKey string, refKey int64) (cell models.Cell, found bool, err error) {
+func (s *Storage) GetCell(ctx context.Context, rowKey uuid.UUID, columnKey string, refKey int64) (cell models.Cell, found bool, err error) {
 	var (
 		resAddedAt   int64
-		resRowKey    string
+		resRowKey    uuid.UUID
 		resColName   string
 		resRefKey    int64
 		resBody      string
@@ -140,10 +141,10 @@ func (s *Storage) GetCell(ctx context.Context, rowKey string, columnKey string, 
 	return cell, found, nil
 }
 
-func (s *Storage) GetCellLatest(ctx context.Context, rowKey, columnKey string) (cell models.Cell, found bool, err error) {
+func (s *Storage) GetCellLatest(ctx context.Context, rowKey uuid.UUID, columnKey string) (cell models.Cell, found bool, err error) {
 	var (
 		resAddedAt   int64
-		resRowKey    string
+		resRowKey    uuid.UUID
 		resColName   string
 		resRefKey    int64
 		resBody      string
@@ -187,7 +188,7 @@ func (s *Storage) PartitionRead(ctx context.Context, partitionNumber int, locati
 
 	var (
 		resAddedAt   int64
-		resRowKey    string
+		resRowKey    uuid.UUID
 		resColName   string
 		resRefKey    int64
 		resBody      string
@@ -289,7 +290,7 @@ func (s *Storage) PartitionRead(ctx context.Context, partitionNumber int, locati
 	return cells, found, nil
 }
 
-func (s *Storage) PutCell(ctx context.Context, rowKey, columnKey string, refKey int64, cell models.Cell) (err error) {
+func (s *Storage) PutCell(ctx context.Context, rowKey uuid.UUID, columnKey string, refKey int64, cell models.Cell) (err error) {
 	var stmt *sql.Stmt
 	stmt, err = s.store.PrepareContext(ctx, putCellSQL)
 	if err != nil {

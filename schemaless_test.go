@@ -4,7 +4,7 @@ import (
 	"context"
 	"code.jogchat.internal/go-schemaless/core"
 	"code.jogchat.internal/go-schemaless/models"
-	st "code.jogchat.internal/go-schemaless/storage/memory"
+	st "code.jogchat.internal/go-schemaless/storage/mysql"
 	"strconv"
 	"testing"
 )

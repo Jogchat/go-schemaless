@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"strconv"
 	"time"
+	"github.com/satori/go.uuid"
 )
 
 // "[Cell is ... ] the smallest data entity in Schemaless - it is immutable; once
@@ -35,7 +36,7 @@ type Cell struct {
 	// https://eng.uber.com/schemaless-part-two/
 
 	AddedAt    int64      `json:"omitempty"`
-	RowKey     string     // UUID
+	RowKey     uuid.UUID     // UUID
 	ColumnName string     // The actual column name for the individual Body blob
 	RefKey     int64      // for versioning or sorting cells in a list
 	Body       string     // Uber chose JSON inside MessagePack'd LZ4 blobs
@@ -45,7 +46,7 @@ type Cell struct {
 // NewCell constructs a Cell structure with the minimum parameters necessary:
 // a row key and column name (strings), a ref key (int64), and a body
 // ([]byte).
-func NewCell(rowKey string, columnName string, refKey int64, body string) Cell {
+func NewCell(rowKey uuid.UUID, columnName string, refKey int64, body string) Cell {
 	return Cell{RowKey: rowKey, ColumnName: columnName, RefKey: refKey, Body: body}
 }
 
@@ -62,7 +63,7 @@ func (c *Cell) String() string {
 	buffer.WriteString("{\"AddedAt\":")
 	buffer.WriteString(addedAtStr)
 	buffer.WriteString("\", \"RowKey\":'")
-	buffer.WriteString(c.RowKey)
+	buffer.WriteString(c.RowKey.String())
 	buffer.WriteString("\", \"ColumnName\":'")
 	buffer.WriteString(c.ColumnName)
 	buffer.WriteString("\", \"RefKey\":")

@@ -53,8 +53,8 @@ func getShards(config map[string][]map[string]string) []core.Shard {
 
 func hash64(b []byte) uint64 { return metro.Hash64(b, 0) }
 
-func newUUID() string {
-	return uuid.Must(uuid.NewV4()).String()
+func newUUID() uuid.UUID {
+	return uuid.Must(uuid.NewV4())
 }
 
 func fakeUserJSON() string {
@@ -86,4 +86,9 @@ func main() {
 
 	// You decide the refKey's purpose. For example, it can
 	// be used as a record version number, or for sort-order.
+
+	//for i := 0; i < 1000; i++ {
+	//	refKey := int64(i)
+	//	kv.PutCell(context.TODO(), newUUID(), "PII", refKey, models.Cell{RefKey: refKey, Body: fakeUserJSON()})
+	//}
 }
