@@ -289,3 +289,14 @@ CREATE TABLE cell
 ) ENGINE=InnoDB;
 
 
+```
+CREATE USER 'root'@'%' IDENTIFIED BY 'Umiuni_jogchat_schemales_2018@';
+GRANT ALL ON *.* TO 'root'@'%';
+FLUSH PRIVILEGES;
+```
+
+```
+GRANT ALL ON *.* TO 'root'@'%';
+SET PASSWORD FOR 'root'@'localhost' = PASSWORD('Umiuni_jogchat_schemales_2018@');
+```
+
