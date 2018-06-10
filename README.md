@@ -104,6 +104,8 @@ Connect to MySQL server
 Have fun
 
 ## How to set up Ubuntu 16.04 with schemaless-go server
+
+## Download and install go bin
 ```
 sudo apt-get update
 sudo apt-get -y upgrade
@@ -114,6 +116,16 @@ add at end of file:
 export PATH=$PATH:/usr/local/go/bin
 source ~/.profile
 ```
+## 
+```
+makedir gocode
+export GOPATH=$HOME/gocode
+cd gocode
+makedir code.jogchat.internal
+cd code.jogchat.internal
+git clone https://github.com/Jogchat/go_schemaless.git
+```
+
 ## DESIGN
 BLOB DESIGN
 ```
@@ -137,3 +149,4 @@ school blob{
         "name": "dummy_name"
 }
 ```
+
