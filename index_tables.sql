@@ -56,7 +56,7 @@ CREATE TABLE index_users_password(
 CREATE TABLE index_users_activate(
     activate BOOLEAN NOT NULL,
     row_key BINARY(16) NOT NULL UNIQUE,
-    PRIMARY KEY (password, row_key)
+    PRIMARY KEY (activate, row_key)
 ) ENGINE=InnoDB;
 
 
@@ -75,19 +75,19 @@ CREATE TABLE index_companies_id(
     PRIMARY KEY (id, row_key)
 ) ENGINE=InnoDB;
 
-CREATE TABLE index_companies_id(
+CREATE TABLE index_companies_category(
     category TEXT NOT NULL,
     row_key BINARY(16) NOT NULL UNIQUE,
     PRIMARY KEY (category, row_key)
 ) ENGINE=InnoDB;
 
-CREATE TABLE index_companies_id(
+CREATE TABLE index_companies_domain(
     domain TEXT NOT NULL,
     row_key BINARY(16) NOT NULL UNIQUE,
     PRIMARY KEY (domain, row_key)
 ) ENGINE=InnoDB;
 
-CREATE TABLE index_companies_id(
+CREATE TABLE index_companies_name(
     name TEXT NOT NULL,
     row_key BINARY(16) NOT NULL UNIQUE,
     PRIMARY KEY (name, row_key)
