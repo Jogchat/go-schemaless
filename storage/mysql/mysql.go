@@ -11,6 +11,8 @@ import (
 	"go.uber.org/zap"
 	"reflect"
 	"time"
+	"encoding/json"
+	"log"
 )
 
 // Storage is a MySQL-backed storage.
@@ -21,8 +23,9 @@ type Storage struct {
 	port     string
 	database string
 
-	store *sql.DB
-	Sugar *zap.SugaredLogger
+	store	*sql.DB
+	indexes	map[string]*Index
+	Sugar	*zap.SugaredLogger
 }
 
 const (
@@ -39,6 +42,8 @@ const (
 	getCellLatestSQL    = "SELECT added_at, row_key, column_name, ref_key, body, created_at FROM cell WHERE row_key = ? AND column_name = ? ORDER BY ref_key DESC LIMIT 1"
 	getCellsForShardSQL = "SELECT added_at, row_key, column_name, ref_key, body, created_at FROM cell WHERE %s > %s LIMIT %d"
 	putCellSQL          = "INSERT INTO cell ( row_key, column_name, ref_key, body ) VALUES(?, ?, ?, ?)"
+	updateIndexSQL		= "UPDATE %s SET %s = ? WHERE row_key = ?"
+	insertIndexSQL		= "INSERT INTO %s (row_key, %s) VALUES (?, ?)"
 )
 
 func exec(db *sql.DB, sqlStr string) error {
@@ -289,6 +294,22 @@ func (s *Storage) PartitionRead(ctx context.Context, partitionNumber int, locati
 	return cells, found, nil
 }
 
+func (s *Storage) putAllIndex(ctx context.Context, rowKey []byte, columnKey string, cell models.Cell) {
+	var body map[string]interface{}
+	err := json.Unmarshal(cell.Body, &body)
+	log.Fatal(err)
+
+
+	for field, value := range body {
+		tableName := indexTableName(columnKey, field)
+		if _, ok := s.indexes[tableName]; !ok {
+			s.indexes[tableName] = NewIndex(columnKey, field, s.store)
+		}
+		table, _ := s.indexes[tableName]
+		table.PutIndex(ctx, rowKey, columnKey, field, value)
+	}
+}
+
 func (s *Storage) PutCell(ctx context.Context, rowKey []byte, columnKey string, refKey int64, cell models.Cell) (err error) {
 	var stmt *sql.Stmt
 	stmt, err = s.store.PrepareContext(ctx, putCellSQL)
@@ -313,6 +334,8 @@ func (s *Storage) PutCell(ctx context.Context, rowKey []byte, columnKey string, 
 	}
 	// TODO(rbastic): Should we side-affect the cell and record the AddedAt?
 	s.Sugar.Infof("ID = %d, affected = %d\n", lastID, rowCnt)
+
+	s.putAllIndex(ctx, rowKey, columnKey, cell)
 	return
 }
 

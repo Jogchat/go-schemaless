@@ -36,7 +36,7 @@ type KVStore struct {
 	mstorages map[string]Storage
 
 	// we avoid holding the lock during a call to a storage engine, which may block
-	mu sync.Mutex
+	mu	sync.Mutex
 }
 
 // Chooser maps keys to shards
