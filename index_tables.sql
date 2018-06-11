@@ -69,6 +69,30 @@ CREATE TABLE companies(
 );
 */
 
+CREATE TABLE index_companies_id(
+    id BINARY(16) NOT NULL,
+    row_key BINARY(16) NOT NULL UNIQUE,
+    PRIMARY KEY (id, row_key)
+) ENGINE=InnoDB;
+
+CREATE TABLE index_companies_id(
+    category TEXT NOT NULL,
+    row_key BINARY(16) NOT NULL UNIQUE,
+    PRIMARY KEY (category, row_key)
+) ENGINE=InnoDB;
+
+CREATE TABLE index_companies_id(
+    domain TEXT NOT NULL,
+    row_key BINARY(16) NOT NULL UNIQUE,
+    PRIMARY KEY (domain, row_key)
+) ENGINE=InnoDB;
+
+CREATE TABLE index_companies_id(
+    name TEXT NOT NULL,
+    row_key BINARY(16) NOT NULL UNIQUE,
+    PRIMARY KEY (name, row_key)
+) ENGINE=InnoDB;
+
 
 /*
 CREATE TABLE schools(
