@@ -102,3 +102,27 @@ CREATE TABLE schools(
    name TEXT
 );
 */
+
+CREATE TABLE index_schools_id(
+    id BINARY(16) NOT NULL,
+    row_key BINARY(16) NOT NULL UNIQUE,
+    PRIMARY KEY (id, row_key)
+) ENGINE=InnoDB;
+
+CREATE TABLE index_schools_category(
+    category TEXT NOT NULL,
+    row_key BINARY(16) NOT NULL UNIQUE,
+    PRIMARY KEY (category, row_key)
+) ENGINE=InnoDB;
+
+CREATE TABLE index_schools_domain(
+    domain TEXT NOT NULL,
+    row_key BINARY(16) NOT NULL UNIQUE,
+    PRIMARY KEY (domain, row_key)
+) ENGINE=InnoDB;
+
+CREATE TABLE index_schools_name(
+    name TEXT NOT NULL,
+    row_key BINARY(16) NOT NULL UNIQUE,
+    PRIMARY KEY (name, row_key)
+) ENGINE=InnoDB;
