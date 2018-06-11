@@ -15,8 +15,9 @@ CREATE TABLE index_users_id(
     PRIMARY KEY (id, row_key)
 ) ENGINE=InnoDB;
 
+
 CREATE TABLE index_users_id(
-    id BINARY(16) NOT NULL,
+    username TEXT NOT NULL,
     row_key BINARY(16) NOT NULL UNIQUE,
     PRIMARY KEY (id, row_key)
 ) ENGINE=InnoDB;
