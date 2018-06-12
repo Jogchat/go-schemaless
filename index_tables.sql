@@ -15,8 +15,8 @@ CREATE TABLE cell
 /*
 CREATE TABLE users(
    id BINARY(16) PRIMARY KEY,
-   username TEXT,
-   email TEXT,
+   username VARCHAR(20),
+   email VARCHAR(254),
    phone INT(10),
    password TEXT,
    activate boolean
@@ -30,13 +30,13 @@ CREATE TABLE index_users_id(
 ) ENGINE=InnoDB;
 
 CREATE TABLE index_users_username(
-    username TEXT NOT NULL,
+    username VARCHAR(20) NOT NULL,
     row_key BINARY(16) NOT NULL UNIQUE,
     PRIMARY KEY (username, row_key)
 ) ENGINE=InnoDB;
 
 CREATE TABLE index_users_email(
-    email TEXT NOT NULL,
+    email VARCHAR(254) NOT NULL,
     row_key BINARY(16) NOT NULL UNIQUE,
     PRIMARY KEY (email, row_key)
 ) ENGINE=InnoDB;
@@ -132,9 +132,10 @@ Note that:
 * Every email address is composed of two parts. The local part that comes before the '@' sign, and the domain part that follows it. In "user@example.com", the local part is "user", and the domain part is "example.com".
 
 The local part must not exceed 64 characters and the domain part cannot be longer than 255 characters.
+https://stackoverflow.com/questions/386294/what-is-the-maximum-length-of-a-valid-email-address
 
 The combined length of the local + @ + domain parts of an email address must not exceed 254 characters. As described in RFC3696 Errata ID 1690.
 * Username length, choose 20. Twitter uses 15, pearson uses 32, blind use 10.
 http://help.pearsoncmg.com/rumba/b2c_self_reg/en/Content/b2c_signin_guidelines.html
 https://help.twitter.com/en/managing-your-account#username-email-and-phone
-
+* https://stackoverflow.com/questions/1885630/whats-the-difference-between-varchar-and-char
