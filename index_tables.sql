@@ -126,3 +126,11 @@ CREATE TABLE index_schools_name(
     row_key BINARY(16) NOT NULL UNIQUE,
     PRIMARY KEY (name, row_key)
 ) ENGINE=InnoDB;
+
+
+Note that:
+Every email address is composed of two parts. The local part that comes before the '@' sign, and the domain part that follows it. In "user@example.com", the local part is "user", and the domain part is "example.com".
+
+The local part must not exceed 64 characters and the domain part cannot be longer than 255 characters.
+
+The combined length of the local + @ + domain parts of an email address must not exceed 254 characters. As described in RFC3696 Errata ID 1690.
