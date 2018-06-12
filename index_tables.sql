@@ -63,9 +63,9 @@ CREATE TABLE index_users_activate(
 /*
 CREATE TABLE companies(
    id BINARY(16) PRIMARY KEY,
-   category TEXT,
-   domain TEXT,
-   name TEXT
+   category VARCHAR(255),
+   domain VARCHAR(63),
+   name VARCHAR(255)
 );
 */
 
@@ -76,19 +76,19 @@ CREATE TABLE index_companies_id(
 ) ENGINE=InnoDB;
 
 CREATE TABLE index_companies_category(
-    category TEXT NOT NULL,
+    category VARCHAR(255) NOT NULL,
     row_key BINARY(16) NOT NULL UNIQUE,
     PRIMARY KEY (category, row_key)
 ) ENGINE=InnoDB;
 
 CREATE TABLE index_companies_domain(
-    domain TEXT NOT NULL,
+    domain VARCHAR(63) NOT NULL,
     row_key BINARY(16) NOT NULL UNIQUE,
     PRIMARY KEY (domain, row_key)
 ) ENGINE=InnoDB;
 
 CREATE TABLE index_companies_name(
-    name TEXT NOT NULL,
+    name VARCHAR(255) NOT NULL,
     row_key BINARY(16) NOT NULL UNIQUE,
     PRIMARY KEY (name, row_key)
 ) ENGINE=InnoDB;
@@ -97,9 +97,9 @@ CREATE TABLE index_companies_name(
 /*
 CREATE TABLE schools(
    id BINARY(16) PRIMARY KEY,
-   category TEXT,
-   domain TEXT,
-   name TEXT
+   category VARCHAR(255),
+   domain VARCHAR(63),
+   name VARCHAR(255)
 );
 */
 
@@ -110,19 +110,19 @@ CREATE TABLE index_schools_id(
 ) ENGINE=InnoDB;
 
 CREATE TABLE index_schools_category(
-    category TEXT NOT NULL,
+    category VARCHAR(255) NOT NULL,
     row_key BINARY(16) NOT NULL UNIQUE,
     PRIMARY KEY (category, row_key)
 ) ENGINE=InnoDB;
 
 CREATE TABLE index_schools_domain(
-    domain TEXT NOT NULL,
+    domain VARCHAR(63) NOT NULL,
     row_key BINARY(16) NOT NULL UNIQUE,
     PRIMARY KEY (domain, row_key)
 ) ENGINE=InnoDB;
 
 CREATE TABLE index_schools_name(
-    name TEXT NOT NULL,
+    name VARCHAR(255) NOT NULL,
     row_key BINARY(16) NOT NULL UNIQUE,
     PRIMARY KEY (name, row_key)
 ) ENGINE=InnoDB;
@@ -139,3 +139,5 @@ The combined length of the local + @ + domain parts of an email address must not
 http://help.pearsoncmg.com/rumba/b2c_self_reg/en/Content/b2c_signin_guidelines.html
 https://help.twitter.com/en/managing-your-account#username-email-and-phone
 * https://stackoverflow.com/questions/1885630/whats-the-difference-between-varchar-and-char
+* label part 63 characters max: https://en.wikipedia.org/wiki/Domain_Name_System  
+https://stackoverflow.com/questions/14402407/maximum-length-of-a-domain-name-without-the-http-www-com-parts
