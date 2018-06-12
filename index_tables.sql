@@ -129,8 +129,12 @@ CREATE TABLE index_schools_name(
 
 
 Note that:
-Every email address is composed of two parts. The local part that comes before the '@' sign, and the domain part that follows it. In "user@example.com", the local part is "user", and the domain part is "example.com".
+* Every email address is composed of two parts. The local part that comes before the '@' sign, and the domain part that follows it. In "user@example.com", the local part is "user", and the domain part is "example.com".
 
 The local part must not exceed 64 characters and the domain part cannot be longer than 255 characters.
 
 The combined length of the local + @ + domain parts of an email address must not exceed 254 characters. As described in RFC3696 Errata ID 1690.
+* Username length, choose 20. Twitter uses 15, pearson uses 32, blind use 10.
+http://help.pearsoncmg.com/rumba/b2c_self_reg/en/Content/b2c_signin_guidelines.html
+https://help.twitter.com/en/managing-your-account#username-email-and-phone
+
