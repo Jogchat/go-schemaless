@@ -141,3 +141,4 @@ https://help.twitter.com/en/managing-your-account#username-email-and-phone
 * https://stackoverflow.com/questions/1885630/whats-the-difference-between-varchar-and-char
 * label part 63 characters max: https://en.wikipedia.org/wiki/Domain_Name_System  
 https://stackoverflow.com/questions/14402407/maximum-length-of-a-domain-name-without-the-http-www-com-parts
+* Bcrypt hash length: https://stackoverflow.com/questions/5881169/what-column-type-length-should-i-use-for-storing-a-bcrypt-hashed-password-in-a-d
