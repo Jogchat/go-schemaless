@@ -1,6 +1,6 @@
 
 
-# Below are schemaless logic
+# Below are schemaless logic schema
 ## cell is a schemaless cell that can store any nosql blob (schema flexibility)
 
 ```
@@ -17,7 +17,7 @@ CREATE TABLE cell
 ```
 
 
-# Below are application logic
+# Below are application logic schema
 
 ## users is a table storing all jogchat users
 
