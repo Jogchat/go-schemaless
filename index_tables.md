@@ -160,7 +160,7 @@ https://stackoverflow.com/questions/14402407/maximum-length-of-a-domain-name-wit
 
 
 ### Technology used:
-### How FriendFeed uses MySQL to store schema-less data (Friendfeed has been bought out by Facebook at 2009 for 50 million, later on schemaless technology has been used across Facebook and Uber
+### How FriendFeed uses MySQL to store schema-less data (Friendfeed has been bought out by Facebook at 2009 for 50 million, later on schemaless technology has been used across Facebook and Uber)
 February 27, 2009
 Background
 
