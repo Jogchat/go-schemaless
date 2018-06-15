@@ -82,7 +82,6 @@ CREATE TABLE companies(
    name VARCHAR(255)
 );
 
-
 CREATE TABLE index_companies_id(
     id BINARY(16) NOT NULL,
     row_key BINARY(16) NOT NULL UNIQUE,
@@ -106,7 +105,7 @@ CREATE TABLE index_companies_name(
     row_key BINARY(16) NOT NULL UNIQUE,
     PRIMARY KEY (name, row_key)
 ) ENGINE=InnoDB;
-
+```
 
 ## Below are edu table and index tables for companies
 
@@ -117,7 +116,6 @@ CREATE TABLE schools(
    domain VARCHAR(63),
    name VARCHAR(255)
 );
-
 
 CREATE TABLE index_schools_id(
     id BINARY(16) NOT NULL,
@@ -144,7 +142,7 @@ CREATE TABLE index_schools_name(
 ) ENGINE=InnoDB;
 ```
 
-Note that:
+## Note that:
 * Every email address is composed of two parts. The local part that comes before the '@' sign, and the domain part that follows it. In "user@example.com", the local part is "user", and the domain part is "example.com".
 
 The local part must not exceed 64 characters and the domain part cannot be longer than 255 characters.
