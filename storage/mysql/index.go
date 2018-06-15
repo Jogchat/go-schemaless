@@ -18,7 +18,7 @@ func NewIndex(col string, field string, conn *sql.DB) *Index {
 	return i
 }
 
-// Update all Index tables relevant to the currnet cell, If entry does not exist, insert into Index table instead
+// PutIndex updates all Index tables relevant to the currnet cell, If entry does not exist, insert into Index table instead
 func (i *Index) PutIndex(ctx context.Context, rowKey []byte, columnKey string, field string, value interface{}) {
 	res := execContext(ctx, i.conn, updateIndexSQL, rowKey, columnKey, field, value)
 	rowCnt, err := res.RowsAffected()
@@ -38,5 +38,5 @@ func execContext(ctx context.Context, conn *sql.DB, rawStmt string, rowKey []byt
 }
 
 func indexTableName(columnKey string, field string) string {
-	return columnKey + "_" + field
+	return "index_" + columnKey + "_" + field
 }
