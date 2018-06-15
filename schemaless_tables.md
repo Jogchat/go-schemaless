@@ -1,4 +1,12 @@
 
+# Set database user name and privileges
+
+```
+CREATE USER 'root'@'%' IDENTIFIED BY 'Umiuni_jogchat_schemales_2018@';
+GRANT ALL ON *.* TO 'root'@'%';
+SET PASSWORD FOR 'root'@'localhost' = PASSWORD('Umiuni_jogchat_schemales_2018@');
+FLUSH PRIVILEGES;
+```
 
 # Below are schemaless core level table
 ## cell is a schemaless cell that can store any nosql blob (schema flexibility)
