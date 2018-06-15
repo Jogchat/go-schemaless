@@ -1,5 +1,9 @@
 
-/*
+
+# Below are schemaless logic
+## cell is a schemaless cell that can store any nosql blob (schema flexibility)
+
+```
 CREATE TABLE cell
 (
     added_at         BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -10,9 +14,14 @@ CREATE TABLE cell
     created_at       DATETIME DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT cell_idx UNIQUE(row_key, column_name,ref_key)
 ) ENGINE=InnoDB;
-*/
+```
 
-/*
+
+# Below are application logic
+
+## users is a table storing all jogchat users
+
+```
 CREATE TABLE users(
    id BINARY(16) PRIMARY KEY,
    username VARCHAR(20),
@@ -21,8 +30,11 @@ CREATE TABLE users(
    password TEXT,
    activate boolean
 );
-*/
+```
 
+## Below are index tables for users
+
+```
 CREATE TABLE index_users_id(
     id BINARY(16) NOT NULL,
     row_key BINARY(16) NOT NULL UNIQUE,
@@ -58,16 +70,18 @@ CREATE TABLE index_users_activate(
     row_key BINARY(16) NOT NULL UNIQUE,
     PRIMARY KEY (activate, row_key)
 ) ENGINE=InnoDB;
+```
 
+## Below are company table and index tables for companies
 
-/*
+```
 CREATE TABLE companies(
    id BINARY(16) PRIMARY KEY,
    category VARCHAR(255),
    domain VARCHAR(63),
    name VARCHAR(255)
 );
-*/
+
 
 CREATE TABLE index_companies_id(
     id BINARY(16) NOT NULL,
@@ -94,14 +108,16 @@ CREATE TABLE index_companies_name(
 ) ENGINE=InnoDB;
 
 
-/*
+## Below are edu table and index tables for companies
+
+```
 CREATE TABLE schools(
    id BINARY(16) PRIMARY KEY,
    category VARCHAR(255),
    domain VARCHAR(63),
    name VARCHAR(255)
 );
-*/
+
 
 CREATE TABLE index_schools_id(
     id BINARY(16) NOT NULL,
@@ -126,7 +142,7 @@ CREATE TABLE index_schools_name(
     row_key BINARY(16) NOT NULL UNIQUE,
     PRIMARY KEY (name, row_key)
 ) ENGINE=InnoDB;
-
+```
 
 Note that:
 * Every email address is composed of two parts. The local part that comes before the '@' sign, and the domain part that follows it. In "user@example.com", the local part is "user", and the domain part is "example.com".
