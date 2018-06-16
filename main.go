@@ -1,9 +1,8 @@
-package main
+package go_schemaless
 
 import (
 	"context"
 
-	"code.jogchat.internal/go-schemaless"
 	"code.jogchat.internal/go-schemaless/utils"
 	"code.jogchat.internal/go-schemaless/core"
 	st "code.jogchat.internal/go-schemaless/storage/mysql"
@@ -13,6 +12,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"code.jogchat.internal/go-schemaless/models"
+	"time"
 )
 
 func newBackend(user, pass, host, port, schemaName string) *st.Storage {
@@ -54,6 +54,20 @@ func newUUID() uuid.UUID {
 	return uuid.Must(uuid.NewV4())
 }
 
+func newBusiness(colKey string, category string, domain string, name string) models.Cell {
+	rowKey := newUUID().Bytes()
+	refKey := time.Now().UnixNano()
+	blob, err := json.Marshal(map[string]interface{} {
+		"id": newUUID().Bytes(),
+		"category": category,
+		"domain": domain,
+		"name": name,
+		"activate": false,
+	})
+	utils.CheckErr(err)
+	return models.Cell{RowKey: rowKey, ColumnName: colKey, RefKey: refKey, Body: blob}
+}
+
 func main() {
 	jsonFile, err := os.Open("config/config.json")
 	utils.CheckErr(err)
@@ -66,41 +80,24 @@ func main() {
 
 	shards := getShards(config)
 
-	//kv := schemaless.New().WithSource(shards)
-	//defer kv.Destroy(context.TODO())
-
-	// We're going to demonstrate jump hash+metro hash with MySQL-backed
-	// storage. This example implements multiple shard schemas on a single
-	// node.
-
-	// You decide the refKey's purpose. For example, it can
-	// be used as a record version number, or for sort-order.
-
-	//for i := 0; i < 1000; i++ {
-	//	refKey := int64(i)
-	//	kv.PutCell(context.TODO(), newUUID(), "PII", refKey, models.Cell{RefKey: refKey, Body: fakeUserJSON()})
-	//}
-
-	dataStore := schemaless.New().WithSource(shards)
+	dataStore := core.New(shards)
 	defer dataStore.Destroy(context.TODO())
 
-	rowKey := newUUID().Bytes()
-	colKey := "schools"
-	refKey := int64(0)
-	blob, err := json.Marshal(map[string]interface{} {
-		"id": newUUID().Bytes(),
-		"category": "university",
-		"domain": "illinois.edu",
-		"name": "UIUC",
-		"activate": false,
-	})
+	UIUC := newBusiness("schools", "university", "illinois.edu", "UIUC")
+	err = dataStore.PutCell(context.TODO(), UIUC.RowKey, UIUC.ColumnName, UIUC.RefKey, UIUC)
 	utils.CheckErr(err)
 
-	err = dataStore.PutCell(context.TODO(), rowKey, colKey, refKey,
-		models.Cell{RefKey: refKey, Body: blob})
+	CMU := newBusiness("schools", "university", "andrew.cmu.edu", "CMU")
+	err = dataStore.PutCell(context.TODO(), CMU.RowKey, CMU.ColumnName, CMU.RefKey, CMU)
 	utils.CheckErr(err)
 
-	cell, _, err := dataStore.GetCellLatest(context.TODO(), rowKey, colKey)
+	Yahoo := newBusiness("companies", "technology", "yahoo-inc.com", "Yahoo!")
+	err = dataStore.PutCell(context.TODO(), Yahoo.RowKey, Yahoo.ColumnName, Yahoo.RefKey, Yahoo)
 	utils.CheckErr(err)
-	fmt.Println(cell.String())
+
+	cells, _, err := dataStore.GetCellsByFieldLatest(context.TODO(), "schools", "category", "university")
+	utils.CheckErr(err)
+	for _, cell := range cells {
+		fmt.Println(cell.String())
+	}
 }

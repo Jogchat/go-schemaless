@@ -1,9 +1,12 @@
 package core
 
 import (
+	jh "github.com/dgryski/go-shardedkv/choosers/jump"
 	"context"
 	"code.jogchat.internal/go-schemaless/models"
 	"sync"
+	"github.com/dgryski/go-metro"
+	"code.jogchat.internal/go-schemaless/utils"
 )
 
 // Storage is a key-value storage backend
@@ -13,6 +16,9 @@ type Storage interface {
 
 	// GetCellLatest returns the latest value for a given rowKey and columnKey, and a bool indicating if the key was present
 	GetCellLatest(ctx context.Context, rowKey []byte, columnKey string) (cell models.Cell, found bool, err error)
+
+	// GetCellsByFieldLatest returns the latest cells for a given filed with value
+	GetCellsByFieldLatest(ctx context.Context, columnKey string, field string, value interface{}) ([]models.Cell, bool, error)
 
 	// PartitionRead returns 'limit' cells after 'location' from shard 'shard_no'
 	PartitionRead(ctx context.Context, partitionNumber int, location string, value interface{}, limit int) (cells []models.Cell, found bool, err error)
@@ -55,8 +61,13 @@ type Shard struct {
 	Backend Storage
 }
 
+func hash64(b []byte) uint64 { return metro.Hash64(b, 0) }
+
+
 // New returns a KVStore that uses chooser to shard the keys across the provided shards
-func New(chooser Chooser, shards []Shard) *KVStore {
+func New(shards []Shard) *KVStore {
+	chooser := jh.New(hash64)
+
 	var buckets []string
 	kv := &KVStore{
 		continuum: chooser,
@@ -121,6 +132,26 @@ func (kv *KVStore) GetCellLatest(ctx context.Context, rowKey []byte, columnKey s
 	storage = kv.storages[shard]
 
 	return storage.GetCellLatest(ctx, rowKey, columnKey)
+}
+
+func (kv *KVStore) GetCellsByFieldLatest(ctx context.Context, columnKey string, field string, value interface{}) (cells []models.Cell, found bool, err error) {
+	kv.mu.Lock()
+	defer kv.mu.Unlock()
+
+	for _, storage := range kv.storages {
+		cells_, found, err := storage.GetCellsByFieldLatest(ctx, columnKey, field, value)
+		if !found {
+			continue
+		}
+		utils.CheckErr(err)
+		cells = append(cells, cells_...)
+	}
+
+	found = true
+	if len(cells) == 0 {
+		found = false
+	}
+	return cells, found, nil
 }
 
 // PutCell

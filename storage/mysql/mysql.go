@@ -295,9 +295,8 @@ func (s *Storage) PartitionRead(ctx context.Context, partitionNumber int, locati
 	return cells, found, nil
 }
 
-func (s *Storage) GetCellsFieldLatest(ctx context.Context, columnKey string, field string, value interface{}) ([]models.Cell, bool, error) {
+func (s *Storage) GetCellsByFieldLatest(ctx context.Context, columnKey string, field string, value interface{}) (cells []models.Cell, found bool, err error) {
 	table, _ := s.indexes[indexTableName(columnKey, field)]
-	var cells []models.Cell
 
 	rowKeys := table.QueryByField(ctx, value)
 	if len(rowKeys) == 0 {
