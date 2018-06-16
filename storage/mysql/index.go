@@ -47,7 +47,7 @@ func (i *Index) QueryByField(ctx context.Context, value interface{}) ([][]byte) 
 func (i *Index) execCtx(ctx context.Context, rawStmt string, args ...interface{}) sql.Result {
 	stmt, err := i.conn.PrepareContext(ctx, fmt.Sprintf(rawStmt, indexTableName(i.Column, i.Field), i.Field))
 	utils.CheckErr(err)
-	res, err := stmt.Exec(args)
+	res, err := stmt.Exec(args...)
 	utils.CheckErr(err)
 	return res
 }
