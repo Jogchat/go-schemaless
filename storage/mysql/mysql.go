@@ -12,7 +12,7 @@ import (
 	"reflect"
 	"time"
 	"encoding/json"
-	"log"
+	"code.jogchat.internal/go-schemaless/utils"
 )
 
 // Storage is a MySQL-backed storage.
@@ -295,11 +295,27 @@ func (s *Storage) PartitionRead(ctx context.Context, partitionNumber int, locati
 	return cells, found, nil
 }
 
+func (s *Storage) GetCellsFieldLatest(ctx context.Context, columnKey string, field string, value interface{}) ([]models.Cell, bool, error) {
+	table, _ := s.indexes[indexTableName(columnKey, field)]
+	var cells []models.Cell
+
+	rowKeys := table.QueryByField(ctx, value)
+	if len(rowKeys) == 0 {
+		return cells, false, nil
+	}
+
+	for _, rowKey := range rowKeys {
+		cell, _, err := s.GetCellLatest(ctx, rowKey, columnKey)
+		utils.CheckErr(err)
+		cells = append(cells, cell)
+	}
+	return cells, true, nil
+}
+
 func (s *Storage) putAllIndex(ctx context.Context, rowKey []byte, columnKey string, cell models.Cell) {
 	var body map[string]interface{}
 	err := json.Unmarshal(cell.Body, &body)
-	log.Fatal(err)
-
+	utils.CheckErr(err)
 
 	for field, value := range body {
 		tableName := indexTableName(columnKey, field)

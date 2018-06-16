@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"context"
-	"log"
+	"code.jogchat.internal/go-schemaless/utils"
 )
 
 type Index struct {
@@ -22,23 +22,23 @@ func NewIndex(col string, field string, conn *sql.DB) *Index {
 func (i *Index) PutIndex(ctx context.Context, rowKey []byte, value interface{}) {
 	res := i.execCtx(ctx, updateIndexSQL, value, rowKey)
 	rowCnt, err := res.RowsAffected()
-	log.Fatal(err)
+	utils.CheckErr(err)
 
 	if rowCnt == 0 {
 		i.execCtx(ctx, insertIndexSQL, rowKey, value)
 	}
 }
 
-func (i *Index) QueryByField(ctx context.Context, value interface{}) ([][60]byte) {
+func (i *Index) QueryByField(ctx context.Context, value interface{}) ([][]byte) {
 	rows, err := i.conn.QueryContext(ctx, queryIndexSQL, value)
-	log.Fatal(err)
-	var rowKeys [][60]byte
+	utils.CheckErr(err)
+	var rowKeys [][]byte
 
 	for rows.Next() {
 		var field interface{}
-		var rowKey [60]byte
+		var rowKey []byte
 		err = rows.Scan(&field, &rowKey)
-		log.Fatal(err)
+		utils.CheckErr(err)
 		rowKeys = append(rowKeys, rowKey)
 	}
 	return rowKeys
@@ -46,9 +46,9 @@ func (i *Index) QueryByField(ctx context.Context, value interface{}) ([][60]byte
 
 func (i *Index) execCtx(ctx context.Context, rawStmt string, args ...interface{}) sql.Result {
 	stmt, err := i.conn.PrepareContext(ctx, fmt.Sprintf(rawStmt, indexTableName(i.Column, i.Field), i.Field))
-	log.Fatal(err)
+	utils.CheckErr(err)
 	res, err := stmt.Exec(args)
-	log.Fatal(err)
+	utils.CheckErr(err)
 	return res
 }
 
