@@ -85,7 +85,7 @@ func main() {
 	defer dataStore.Destroy(context.TODO())
 
 	rowKey := newUUID().Bytes()
-	colKey := "school"
+	colKey := "schools"
 	refKey := int64(0)
 	blob, err := json.Marshal(map[string]interface{} {
 		"id": newUUID().Bytes(),

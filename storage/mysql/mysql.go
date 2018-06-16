@@ -44,6 +44,7 @@ const (
 	putCellSQL          = "INSERT INTO cell ( row_key, column_name, ref_key, body ) VALUES(?, ?, ?, ?)"
 	updateIndexSQL		= "UPDATE %s SET %s = ? WHERE row_key = ?"
 	insertIndexSQL		= "INSERT INTO %s (row_key, %s) VALUES (?, ?)"
+	queryIndexSQL		= "SELECT row_key FROM %s WHERE %s = ?"
 )
 
 func exec(db *sql.DB, sqlStr string) error {
@@ -306,7 +307,7 @@ func (s *Storage) putAllIndex(ctx context.Context, rowKey []byte, columnKey stri
 			s.indexes[tableName] = NewIndex(columnKey, field, s.store)
 		}
 		table, _ := s.indexes[tableName]
-		table.PutIndex(ctx, rowKey, columnKey, field, value)
+		table.PutIndex(ctx, rowKey, value)
 	}
 }
 
