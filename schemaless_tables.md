@@ -69,7 +69,7 @@ CREATE TABLE index_users_phone(
 
 CREATE TABLE index_users_password(
     password TEXT NOT NULL,
-    row_key BINARY(16) NOT NULL UNIQUE,
+    row_key BINARY(60) NOT NULL UNIQUE,
     PRIMARY KEY (password, row_key)
 ) ENGINE=InnoDB;
 
