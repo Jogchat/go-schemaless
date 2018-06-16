@@ -76,6 +76,8 @@ func (s *Storage) Open() error {
 		return err
 	}
 	s.store = db
+
+	s.indexes = make(map[string]*Index)
 	return nil
 }
 

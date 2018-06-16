@@ -1,4 +1,4 @@
-package go_schemaless
+package main
 
 import (
 	"context"
@@ -23,14 +23,9 @@ func newBackend(user, pass, host, port, schemaName string) *st.Storage {
 		WithDatabase(schemaName)
 
 	err := m.WithZap()
-	if err != nil {
-		panic(err)
-	}
-
+	utils.CheckErr(err)
 	err = m.Open()
-	if err != nil {
-		panic(err)
-	}
+	utils.CheckErr(err)
 
 	// TODO(rbastic): defer Sync() on all backend storage loggers
 	return m
@@ -62,7 +57,6 @@ func newBusiness(colKey string, category string, domain string, name string) mod
 		"category": category,
 		"domain": domain,
 		"name": name,
-		"activate": false,
 	})
 	utils.CheckErr(err)
 	return models.Cell{RowKey: rowKey, ColumnName: colKey, RefKey: refKey, Body: blob}
