@@ -49,11 +49,11 @@ func newUUID() uuid.UUID {
 	return uuid.Must(uuid.NewV4())
 }
 
-func newBusiness(colKey string, category string, domain string, name string) models.Cell {
+func newBusiness(id uuid.UUID, colKey string, category string, domain string, name string) models.Cell {
 	rowKey := newUUID().Bytes()
 	refKey := time.Now().UnixNano()
 	blob, err := json.Marshal(map[string]interface{} {
-		"id": newUUID(),
+		"id": id,
 		"category": category,
 		"domain": domain,
 		"name": name,
@@ -77,15 +77,15 @@ func main() {
 	dataStore := core.New(shards)
 	defer dataStore.Destroy(context.TODO())
 
-	UIUC := newBusiness("schools", "university", "illinois.edu", "UIUC")
+	UIUC := newBusiness(newUUID(), "schools", "university", "illinois.edu", "UIUC")
 	err = dataStore.PutCell(context.TODO(), UIUC.RowKey, UIUC.ColumnName, UIUC.RefKey, UIUC)
 	utils.CheckErr(err)
 
-	CMU := newBusiness("schools", "university", "andrew.cmu.edu", "CMU")
+	CMU := newBusiness(newUUID(), "schools", "university", "andrew.cmu.edu", "CMU")
 	err = dataStore.PutCell(context.TODO(), CMU.RowKey, CMU.ColumnName, CMU.RefKey, CMU)
 	utils.CheckErr(err)
 
-	Yahoo := newBusiness("companies", "technology", "yahoo-inc.com", "Yahoo!")
+	Yahoo := newBusiness(newUUID(), "companies", "technology", "yahoo-inc.com", "Yahoo!")
 	err = dataStore.PutCell(context.TODO(), Yahoo.RowKey, Yahoo.ColumnName, Yahoo.RefKey, Yahoo)
 	utils.CheckErr(err)
 

@@ -30,14 +30,14 @@ func (i *Index) PutIndex(ctx context.Context, rowKey []byte, value interface{}) 
 }
 
 func (i *Index) QueryByField(ctx context.Context, value interface{}) ([][]byte) {
-	rows, err := i.conn.QueryContext(ctx, queryIndexSQL, value)
+	stmt := fmt.Sprintf(queryIndexSQL, indexTableName(i.Column, i.Field), i.Field)
+	rows, err := i.conn.QueryContext(ctx, stmt, value)
 	utils.CheckErr(err)
 	var rowKeys [][]byte
 
 	for rows.Next() {
-		var field interface{}
 		var rowKey []byte
-		err = rows.Scan(&field, &rowKey)
+		err = rows.Scan(&rowKey)
 		utils.CheckErr(err)
 		rowKeys = append(rowKeys, rowKey)
 	}
