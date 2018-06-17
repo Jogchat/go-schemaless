@@ -18,8 +18,8 @@ DELETE from index_companies_id;
 DELETE from index_companies_category;
 DELETE from index_companies_domain;
 DELETE from index_companies_name;
-``
-`
+```
+
 # Clearing schools
 ```
 DELETE from schools;
