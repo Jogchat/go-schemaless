@@ -1,6 +1,8 @@
 
 ## [What is schemaless technology?] (https://github.com/Jogchat/go-schemaless/blob/master/schemaless_technology.md)
 ## [What does our schema table look like?] (https://github.com/Jogchat/go-schemaless/blob/master/schemaless_tables.md)
+## [How to clear db for quick test purpose?] (https://github.com/Jogchat/go-schemaless/blob/master/Clear_DB.md)
+
 This is an open-source, MIT-licensed implementation of Uber's Schemaless
 (immutable BigTable-style sharded MySQL datastore)
 
