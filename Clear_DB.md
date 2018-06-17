@@ -28,3 +28,13 @@ DELETE from index_schools_category;
 DELETE from index_schools_domain;
 DELETE from index_schools_name;
 ```
+
+# Test users:
+test0
+password0
+
+test1
+password1
+
+test2
+password2
