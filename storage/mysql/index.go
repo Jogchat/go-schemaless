@@ -33,7 +33,7 @@ func (i *Index) PutIndex(ctx context.Context, rowKey []byte, value interface{}) 
 }
 
 func (i *Index) QueryByField(ctx context.Context, value interface{}) ([][]byte) {
-	stmt := fmt.Sprintf(queryIndexSQL, indexTableName(i.Column, i.Field), i.Field)
+	stmt := fmt.Sprintf(queryIndexSQL, utils.IndexTableName(i.Column, i.Field), i.Field)
 	rows, err := i.conn.QueryContext(ctx, stmt, value)
 	utils.CheckErr(err)
 	var rowKeys [][]byte
@@ -48,13 +48,9 @@ func (i *Index) QueryByField(ctx context.Context, value interface{}) ([][]byte) 
 }
 
 func (i *Index) execCtx(ctx context.Context, rawStmt string, args ...interface{}) sql.Result {
-	stmt, err := i.conn.PrepareContext(ctx, fmt.Sprintf(rawStmt, indexTableName(i.Column, i.Field), i.Field))
+	stmt, err := i.conn.PrepareContext(ctx, fmt.Sprintf(rawStmt, utils.IndexTableName(i.Column, i.Field), i.Field))
 	utils.CheckErr(err)
 	res, err := stmt.Exec(args...)
 	utils.CheckErr(err)
 	return res
-}
-
-func indexTableName(columnKey string, field string) string {
-	return "index_" + columnKey + "_" + field
 }

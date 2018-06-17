@@ -299,10 +299,8 @@ func (s *Storage) PartitionRead(ctx context.Context, partitionNumber int, locati
 }
 
 func (s *Storage) GetCellsByFieldLatest(ctx context.Context, columnKey string, field string, value interface{}) (cells []models.Cell, found bool, err error) {
-	table, ok := s.indexes[indexTableName(columnKey, field)]
-	if !ok {
-		return cells, false, nil
-	}
+	// Add Index table if not exist
+	table := s.CheckAddIndex(columnKey, field)
 
 	rowKeys := table.QueryByField(ctx, value)
 	if len(rowKeys) == 0 {
@@ -317,17 +315,14 @@ func (s *Storage) GetCellsByFieldLatest(ctx context.Context, columnKey string, f
 	return cells, true, nil
 }
 
+
 func (s *Storage) putAllIndex(ctx context.Context, rowKey []byte, columnKey string, cell models.Cell) {
 	var body map[string]interface{}
 	err := json.Unmarshal(cell.Body, &body)
 	utils.CheckErr(err)
 
 	for field, value := range body {
-		tableName := indexTableName(columnKey, field)
-		if _, ok := s.indexes[tableName]; !ok {
-			s.indexes[tableName] = NewIndex(columnKey, field, s.store)
-		}
-		table, _ := s.indexes[tableName]
+		table := s.CheckAddIndex(columnKey, field)
 		// TODO: this is hacky
 		if field == "id" {
 			id, err := uuid.FromString(value.(string))
@@ -337,6 +332,15 @@ func (s *Storage) putAllIndex(ctx context.Context, rowKey []byte, columnKey stri
 			table.PutIndex(ctx, rowKey, value)
 		}
 	}
+}
+
+func (s *Storage) CheckAddIndex(columnKey string, field string) *Index {
+	tableName := utils.IndexTableName(columnKey, field)
+	if _, ok := s.indexes[tableName]; !ok {
+		s.indexes[tableName] = NewIndex(columnKey, field, s.store)
+	}
+	table, _ := s.indexes[tableName]
+	return table
 }
 
 func (s *Storage) PutCell(ctx context.Context, rowKey []byte, columnKey string, refKey int64, cell models.Cell) (err error) {
