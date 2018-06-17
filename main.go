@@ -83,6 +83,9 @@ func main() {
 
 	CMU := newBusiness(newUUID(), "schools", "university", "andrew.cmu.edu", "CMU")
 	err = dataStore.PutCell(context.TODO(), CMU.RowKey, CMU.ColumnName, CMU.RefKey, CMU)
+
+	Sift := newBusiness(newUUID(), "companies", "technology", "siftscience.com", "Sift Science")
+	err = dataStore.PutCell(context.TODO(), Sift.RowKey, Sift.ColumnName, Sift.RefKey, Sift)
 	utils.CheckErr(err)
 
 	Yahoo := newBusiness(newUUID(), "companies", "technology", "yahoo-inc.com", "Yahoo!")
@@ -90,6 +93,12 @@ func main() {
 	utils.CheckErr(err)
 
 	cells, _, err := dataStore.GetCellsByFieldLatest(context.TODO(), "schools", "category", "university")
+	utils.CheckErr(err)
+	for _, cell := range cells {
+		fmt.Println(cell.String())
+	}
+
+	cells, _, err = dataStore.GetCellsByFieldLatest(context.TODO(), "companies", "domain", "yahoo-inc.com")
 	utils.CheckErr(err)
 	for _, cell := range cells {
 		fmt.Println(cell.String())
