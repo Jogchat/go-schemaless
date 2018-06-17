@@ -53,7 +53,7 @@ func newBusiness(colKey string, category string, domain string, name string) mod
 	rowKey := newUUID().Bytes()
 	refKey := time.Now().UnixNano()
 	blob, err := json.Marshal(map[string]interface{} {
-		"id": newUUID().Bytes(),
+		"id": newUUID(),
 		"category": category,
 		"domain": domain,
 		"name": name,
