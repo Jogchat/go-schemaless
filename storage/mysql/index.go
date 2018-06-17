@@ -14,7 +14,10 @@ type Index struct {
 }
 
 func NewIndex(col string, field string, conn *sql.DB) *Index {
-	i := &Index{Column: col, Field: field, conn: conn}
+	i := new(Index)
+	i.Column = col
+	i.Field = field
+	i.conn = conn
 	return i
 }
 

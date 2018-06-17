@@ -58,7 +58,7 @@ func exec(db *sql.DB, sqlStr string) error {
 
 // New returns a new mysql-backed Storage
 func New() *Storage {
-	return &Storage{}
+	return new(Storage)
 }
 
 func (s *Storage) WithZap() error {
@@ -299,7 +299,10 @@ func (s *Storage) PartitionRead(ctx context.Context, partitionNumber int, locati
 }
 
 func (s *Storage) GetCellsByFieldLatest(ctx context.Context, columnKey string, field string, value interface{}) (cells []models.Cell, found bool, err error) {
-	table, _ := s.indexes[indexTableName(columnKey, field)]
+	table, ok := s.indexes[indexTableName(columnKey, field)]
+	if !ok {
+		return cells, false, nil
+	}
 
 	rowKeys := table.QueryByField(ctx, value)
 	if len(rowKeys) == 0 {

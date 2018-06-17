@@ -2,6 +2,7 @@ package core
 
 import (
 	jh "github.com/dgryski/go-shardedkv/choosers/jump"
+	"code.jogchat.internal/go-schemaless/storage/mysql"
 	"context"
 	"code.jogchat.internal/go-schemaless/models"
 	"sync"
@@ -9,37 +10,13 @@ import (
 	"code.jogchat.internal/go-schemaless/utils"
 )
 
-// Storage is a key-value storage backend
-type Storage interface {
-	// GetCell the cell designated (row key, column key, ref key)
-	GetCell(ctx context.Context, rowKey []byte, columnKey string, refKey int64) (cell models.Cell, found bool, err error)
-
-	// GetCellLatest returns the latest value for a given rowKey and columnKey, and a bool indicating if the key was present
-	GetCellLatest(ctx context.Context, rowKey []byte, columnKey string) (cell models.Cell, found bool, err error)
-
-	// GetCellsByFieldLatest returns the latest cells for a given filed with value
-	GetCellsByFieldLatest(ctx context.Context, columnKey string, field string, value interface{}) ([]models.Cell, bool, error)
-
-	// PartitionRead returns 'limit' cells after 'location' from shard 'shard_no'
-	PartitionRead(ctx context.Context, partitionNumber int, location string, value interface{}, limit int) (cells []models.Cell, found bool, err error)
-
-	// PutCell inits a cell with given row key, column key, and ref key
-	PutCell(ctx context.Context, rowKey []byte, columnKey string, refKey int64, cell models.Cell) (err error)
-
-	// ResetConnection reinitializes the connection for the shard responsible for a key
-	ResetConnection(ctx context.Context, key string) error
-
-	// Cleans up any resources, etc.
-	Destroy(ctx context.Context) error
-}
-
 // KVStore is a sharded key-value store
 type KVStore struct {
 	continuum Chooser
-	storages  map[string]Storage
+	storages  map[string]*mysql.Storage
 
 	migration Chooser
-	mstorages map[string]Storage
+	mstorages map[string]*mysql.Storage
 
 	// we avoid holding the lock during a call to a storage engine, which may block
 	mu	sync.Mutex
@@ -58,7 +35,7 @@ type Chooser interface {
 // Shard is a named storage backend
 type Shard struct {
 	Name    string
-	Backend Storage
+	Backend *mysql.Storage
 }
 
 func hash64(b []byte) uint64 { return metro.Hash64(b, 0) }
@@ -71,7 +48,7 @@ func New(shards []Shard) *KVStore {
 	var buckets []string
 	kv := &KVStore{
 		continuum: chooser,
-		storages:  make(map[string]Storage),
+		storages:  make(map[string]*mysql.Storage),
 		// what about migration?
 	}
 	for _, shard := range shards {
@@ -83,8 +60,8 @@ func New(shards []Shard) *KVStore {
 }
 
 func (kv *KVStore) GetCell(ctx context.Context, rowKey []byte, columnKey string, refKey int64) (cell models.Cell, found bool, err error) {
-	var storage Storage
-	var migStorage Storage
+	var storage *mysql.Storage
+	var migStorage *mysql.Storage
 
 	kv.mu.Lock()
 	defer kv.mu.Unlock()
@@ -97,18 +74,18 @@ func (kv *KVStore) GetCell(ctx context.Context, rowKey []byte, columnKey string,
 	storage = kv.storages[shard]
 
 	if migStorage != nil {
-		val, ok, err := migStorage.GetCell(ctx, rowKey, columnKey, refKey)
+		val, ok, err := (*migStorage).GetCell(ctx, rowKey, columnKey, refKey)
 		if ok {
 			return val, ok, err
 		}
 	}
 
-	return storage.GetCell(ctx, rowKey, columnKey, refKey)
+	return (*storage).GetCell(ctx, rowKey, columnKey, refKey)
 }
 
 func (kv *KVStore) GetCellLatest(ctx context.Context, rowKey []byte, columnKey string) (cell models.Cell, found bool, err error) {
-	var storage Storage
-	var migStorage Storage
+	var storage *mysql.Storage
+	var migStorage *mysql.Storage
 
 	kv.mu.Lock()
 	defer kv.mu.Unlock()
@@ -119,7 +96,7 @@ func (kv *KVStore) GetCellLatest(ctx context.Context, rowKey []byte, columnKey s
 	}
 
 	if migStorage != nil {
-		val, ok, err := migStorage.GetCellLatest(ctx, rowKey, columnKey)
+		val, ok, err := (*migStorage).GetCellLatest(ctx, rowKey, columnKey)
 		if err != nil {
 			return val, ok, err
 		}
@@ -131,7 +108,7 @@ func (kv *KVStore) GetCellLatest(ctx context.Context, rowKey []byte, columnKey s
 	shard := kv.continuum.Choose(string(rowKey))
 	storage = kv.storages[shard]
 
-	return storage.GetCellLatest(ctx, rowKey, columnKey)
+	return (*storage).GetCellLatest(ctx, rowKey, columnKey)
 }
 
 func (kv *KVStore) GetCellsByFieldLatest(ctx context.Context, columnKey string, field string, value interface{}) (cells []models.Cell, found bool, err error) {
@@ -139,7 +116,7 @@ func (kv *KVStore) GetCellsByFieldLatest(ctx context.Context, columnKey string, 
 	defer kv.mu.Unlock()
 
 	for _, storage := range kv.storages {
-		cells_, found, err := storage.GetCellsByFieldLatest(ctx, columnKey, field, value)
+		cells_, found, err := (*storage).GetCellsByFieldLatest(ctx, columnKey, field, value)
 		if !found {
 			continue
 		}
@@ -156,7 +133,7 @@ func (kv *KVStore) GetCellsByFieldLatest(ctx context.Context, columnKey string, 
 
 // PutCell
 func (kv *KVStore) PutCell(ctx context.Context, rowKey []byte, columnKey string, refKey int64, cell models.Cell) error {
-	var storage Storage
+	var storage *mysql.Storage
 
 	kv.mu.Lock()
 	defer kv.mu.Unlock()
@@ -165,13 +142,13 @@ func (kv *KVStore) PutCell(ctx context.Context, rowKey []byte, columnKey string,
 		shard := kv.migration.Choose(string(rowKey))
 		storage = kv.mstorages[shard]
 
-		return storage.PutCell(ctx, rowKey, columnKey, refKey, cell)
+		return (*storage).PutCell(ctx, rowKey, columnKey, refKey, cell)
 	}
 
 	shard := kv.continuum.Choose(string(rowKey))
 	storage = kv.storages[shard]
 
-	return storage.PutCell(ctx, rowKey, columnKey, refKey, cell)
+	return (*storage).PutCell(ctx, rowKey, columnKey, refKey, cell)
 }
 
 func (kv *KVStore) PartitionRead(ctx context.Context, partitionNumber int, location string, value interface{}, limit int) (cells []models.Cell, found bool, err error) {
@@ -185,7 +162,7 @@ func (kv *KVStore) PartitionRead(ctx context.Context, partitionNumber int, locat
 		migStorage := kv.mstorages[shard]
 
 		if migStorage != nil {
-			return migStorage.PartitionRead(ctx, partitionNumber, location, value, limit)
+			return (*migStorage).PartitionRead(ctx, partitionNumber, location, value, limit)
 		}
 	}
 
@@ -193,7 +170,7 @@ func (kv *KVStore) PartitionRead(ctx context.Context, partitionNumber int, locat
 	shard := buckets[partitionNumber]
 	storage := kv.storages[shard]
 
-	return storage.PartitionRead(ctx, partitionNumber, location, value, limit)
+	return (*storage).PartitionRead(ctx, partitionNumber, location, value, limit)
 }
 
 // ResetConnection implements Storage.ResetConnection()
@@ -206,7 +183,7 @@ func (kv *KVStore) ResetConnection(ctx context.Context, key string) error {
 		migStorage := kv.mstorages[shard]
 
 		if migStorage != nil {
-			err := migStorage.ResetConnection(ctx, key)
+			err := (*migStorage).ResetConnection(ctx, key)
 			if err != nil {
 				return err
 			}
@@ -215,7 +192,7 @@ func (kv *KVStore) ResetConnection(ctx context.Context, key string) error {
 	shard := kv.continuum.Choose(key)
 	storage := kv.storages[shard]
 
-	return storage.ResetConnection(ctx, key)
+	return (*storage).ResetConnection(ctx, key)
 }
 
 // Destroy implements Storage.Destroy()
@@ -225,7 +202,7 @@ func (kv *KVStore) Destroy(ctx context.Context) error {
 
 	if kv.migration != nil {
 		for _, migStorage := range kv.mstorages {
-			err := migStorage.Destroy(ctx)
+			err := (*migStorage).Destroy(ctx)
 			if err != nil {
 				return err
 			}
@@ -233,7 +210,7 @@ func (kv *KVStore) Destroy(ctx context.Context) error {
 		return nil
 	}
 	for _, store := range kv.storages {
-		err := store.Destroy(ctx)
+		err := (*store).Destroy(ctx)
 		if err != nil {
 			return err
 		}
@@ -242,7 +219,7 @@ func (kv *KVStore) Destroy(ctx context.Context) error {
 }
 
 // AddShard adds a shard from the list of known shards
-func (kv *KVStore) AddShard(shard string, storage Storage) {
+func (kv *KVStore) AddShard(shard string, storage *mysql.Storage) {
 	kv.mu.Lock()
 	defer kv.mu.Unlock()
 
@@ -275,7 +252,7 @@ func (kv *KVStore) BeginMigrationWithShards(continuum Chooser, shards []Shard) {
 	defer kv.mu.Unlock()
 
 	var buckets []string
-	mstorages := make(map[string]Storage)
+	mstorages := make(map[string]*mysql.Storage)
 	for _, shard := range shards {
 		buckets = append(buckets, shard.Name)
 		mstorages[shard.Name] = shard.Backend

@@ -5,7 +5,7 @@ import (
 
 	"code.jogchat.internal/go-schemaless/utils"
 	"code.jogchat.internal/go-schemaless/core"
-	st "code.jogchat.internal/go-schemaless/storage/mysql"
+	"code.jogchat.internal/go-schemaless/storage/mysql"
 	"github.com/satori/go.uuid"
 	"os"
 	"io/ioutil"
@@ -15,8 +15,8 @@ import (
 	"time"
 )
 
-func newBackend(user, pass, host, port, schemaName string) *st.Storage {
-	m := st.New().WithUser(user).
+func newBackend(user, pass, host, port, schemaName string) *mysql.Storage {
+	m := mysql.New().WithUser(user).
 		WithPass(pass).
 		WithHost(host).
 		WithPort(port).
