@@ -3,12 +3,14 @@
 ## [What does our schema table look like?] (https://github.com/Jogchat/go-schemaless/blob/master/schemaless_tables.md)
 ## [How to clear db for quick test purpose?] (https://github.com/Jogchat/go-schemaless/blob/master/Clear_DB.md)
 ## Outbound API (in core.go, currently monolithic, will convert to gRPC definition later)
+
 ```
-func (kv *KVStore) GetCell(ctx context.Context, rowKey []byte, columnKey string, refKey int64) (cell models.Cell, found bool, err error)
-func (kv *KVStore) GetCellLatest(ctx context.Context, rowKey []byte, columnKey string) (cell models.Cell, found bool, err error) {
-func (kv *KVStore) GetCellsByFieldLatest(ctx context.Context, columnKey string, field string, value interface{}) (cells []models.Cell, found bool, err error)
-func (kv *KVStore) PutCell(ctx context.Context, rowKey []byte, columnKey string, refKey int64, cell models.Cell) error
+PutCell(ctx context.Context, rowKey []byte, columnKey string, refKey int64, cell models.Cell) error
+GetCell(ctx context.Context, rowKey []byte, columnKey string, refKey int64) (cell models.Cell, found bool, err error)
+GetCellLatest(ctx context.Context, rowKey []byte, columnKey string) (cell models.Cell, found bool, err error) {
+GetCellsByFieldLatest(ctx context.Context, columnKey string, field string, value interface{}) (cells []models.Cell, found bool, err error)
 ```
+
 This is an open-source, MIT-licensed implementation of Uber's Schemaless
 (immutable BigTable-style sharded MySQL datastore)
 
