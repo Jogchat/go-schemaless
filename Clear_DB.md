@@ -30,6 +30,7 @@ DELETE from index_schools_name;
 ```
 
 # Test users:
+```
 test0
 password0
 
@@ -38,3 +39,4 @@ password1
 
 test2
 password2
+```
