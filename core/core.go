@@ -1,12 +1,12 @@
 package core
 
 import (
-	jh "github.com/dgryski/go-shardedkv/choosers/jump"
+	jh "code.jogchat.internal/dgryski-go-shardedkv/choosers/jump"
 	"code.jogchat.internal/go-schemaless/storage/mysql"
 	"context"
 	"code.jogchat.internal/go-schemaless/models"
 	"sync"
-	"github.com/dgryski/go-metro"
+	"code.jogchat.internal/dgryski-go-metro"
 	"code.jogchat.internal/go-schemaless/utils"
 )
 
