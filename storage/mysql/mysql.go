@@ -43,8 +43,7 @@ const (
 	getCellLatestSQL    = "SELECT added_at, row_key, column_name, ref_key, body, created_at FROM cell WHERE row_key = ? AND column_name = ? ORDER BY ref_key DESC LIMIT 1"
 	getCellsForShardSQL = "SELECT added_at, row_key, column_name, ref_key, body, created_at FROM cell WHERE %s > %s LIMIT %d"
 	putCellSQL          = "INSERT INTO cell ( row_key, column_name, ref_key, body ) VALUES(?, ?, ?, ?)"
-	updateIndexSQL		= "UPDATE %s SET %s = ? WHERE row_key = ?"
-	insertIndexSQL		= "INSERT INTO %s (row_key, %s) VALUES (?, ?)"
+	insertIndexSQL		= "INSERT INTO %s (row_key, %s) VALUES (?, ?) ON DUPLICATE KEY UPDATE %s = ?"
 	queryIndexSQL		= "SELECT row_key FROM %s WHERE %s = ?"
 )
 

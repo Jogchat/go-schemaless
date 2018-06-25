@@ -23,13 +23,10 @@ func NewIndex(col string, field string, conn *sql.DB) *Index {
 
 // PutIndex updates all Index tables relevant to the currnet cell, If entry does not exist, insert into Index table instead
 func (i *Index) PutIndex(ctx context.Context, rowKey []byte, value interface{}) {
-	res := i.execCtx(ctx, updateIndexSQL, value, rowKey)
-	rowCnt, err := res.RowsAffected()
+	stmt, err := i.conn.PrepareContext(ctx, fmt.Sprintf(insertIndexSQL, utils.IndexTableName(i.Column, i.Field), i.Field, i.Field))
 	utils.CheckErr(err)
-
-	if rowCnt == 0 {
-		i.execCtx(ctx, insertIndexSQL, rowKey, value)
-	}
+	_, err = stmt.Exec(rowKey, value, value)
+	utils.CheckErr(err)
 }
 
 func (i *Index) QueryByField(ctx context.Context, value interface{}) ([][]byte) {
@@ -45,12 +42,4 @@ func (i *Index) QueryByField(ctx context.Context, value interface{}) ([][]byte) 
 		rowKeys = append(rowKeys, rowKey)
 	}
 	return rowKeys
-}
-
-func (i *Index) execCtx(ctx context.Context, rawStmt string, args ...interface{}) sql.Result {
-	stmt, err := i.conn.PrepareContext(ctx, fmt.Sprintf(rawStmt, utils.IndexTableName(i.Column, i.Field), i.Field))
-	utils.CheckErr(err)
-	res, err := stmt.Exec(args...)
-	utils.CheckErr(err)
-	return res
 }
