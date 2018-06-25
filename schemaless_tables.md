@@ -35,7 +35,8 @@ CREATE TABLE users(
    username VARCHAR(20),
    email VARCHAR(254),
    phone INT(10),
-   password BINARY(16),
+   password BINARY(60),
+   token BINARY(60),
    activate boolean
 );
 ```
