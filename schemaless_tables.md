@@ -35,7 +35,8 @@ CREATE TABLE users(
    username VARCHAR(20),
    email VARCHAR(254),
    phone INT(10),
-   password BINARY(16),
+   password BINARY(60),
+   token BINARY(60),
    activate boolean
 );
 ```
@@ -77,6 +78,12 @@ CREATE TABLE index_users_activate(
     activate BOOLEAN NOT NULL,
     row_key BINARY(16) NOT NULL UNIQUE,
     PRIMARY KEY (activate, row_key)
+) ENGINE=InnoDB;
+
+CREATE TABLE index_users_token(
+    token BINARY(60) NOT NULL,
+    row_key BINARY(16) NOT NULL UNIQUE,
+    PRIMARY KEY (token, row_key)
 ) ENGINE=InnoDB;
 ```
 

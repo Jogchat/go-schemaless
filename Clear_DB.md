@@ -1,3 +1,9 @@
+# Connect database;
+```
+mysql -u root -p
+Umiuni_jogchat_schemales_2018@
+use jogchat0;
+```
 # Clearing Schemaless database commands:
 
 ```
@@ -9,6 +15,7 @@ DELETE from index_users_email;
 DELETE from index_users_phone;
 DELETE from index_users_password;
 DELETE from index_users_activate;
+DELETE from index_users_token;
 ```
 
 # Clearing companies
