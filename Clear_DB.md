@@ -1,3 +1,9 @@
+# Connect database;
+```
+mysql -u root -p
+Umiuni_jogchat_schemales_2018@
+use jogchat0;
+```
 # Clearing Schemaless database commands:
 
 ```
