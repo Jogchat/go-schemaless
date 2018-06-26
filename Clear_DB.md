@@ -49,5 +49,9 @@ password2
 ```
 
 # Clear remote tables using scripts:
+```
 mysql -h "165.227.25.43" -u "root" "-pUmiuni_jogchat_schemales_2018@" "jogchat0" < "mysql_clean.sql"
+```
+```
 mysql -h "138.197.103.33" -u "root" "-pUmiuni_jogchat_schemales_2018@" "jogchat1" < "mysql_clean.sql"
+```
