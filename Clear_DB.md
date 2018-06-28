@@ -8,7 +8,6 @@ use jogchat0;
 
 ```
 DELETE from cell;
-DELETE from users;
 DELETE from index_users_id;
 DELETE from index_users_username;
 DELETE from index_users_email;
