@@ -19,7 +19,6 @@ DELETE from index_users_token;
 
 # Clearing companies
 ```
-DELETE from companies;
 DELETE from index_companies_id;
 DELETE from index_companies_category;
 DELETE from index_companies_domain;
@@ -28,7 +27,6 @@ DELETE from index_companies_name;
 
 # Clearing schools
 ```
-DELETE from schools;
 DELETE from index_schools_id;
 DELETE from index_schools_category;
 DELETE from index_schools_domain;
