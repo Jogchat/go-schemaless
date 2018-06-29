@@ -1,3 +1,8 @@
+# Clearing script migrate to 
+```
+https://github.com/Jogchat/schemaless_clean
+```
+
 # Connect database;
 ```
 mysql -u root -p
