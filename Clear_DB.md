@@ -1,4 +1,4 @@
-# Clearing script migrate to 
+# Clearing script migrate to:
 ```
 https://github.com/Jogchat/schemaless_clean
 ```
