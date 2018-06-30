@@ -17,14 +17,12 @@ DELETE from index_users_id;
 DELETE from index_users_username;
 DELETE from index_users_email;
 DELETE from index_users_phone;
-DELETE from index_users_password;
 DELETE from index_users_activate;
 DELETE from index_users_token;
 ```
 
 # Clearing companies
 ```
-DELETE from index_companies_id;
 DELETE from index_companies_category;
 DELETE from index_companies_domain;
 DELETE from index_companies_name;
@@ -32,10 +30,17 @@ DELETE from index_companies_name;
 
 # Clearing schools
 ```
-DELETE from index_schools_id;
 DELETE from index_schools_category;
 DELETE from index_schools_domain;
 DELETE from index_schools_name;
+```
+
+# Clearning news
+```
+DELETE from index_news_domain;
+DELETE from index_news_timestamp;
+DELETE from index_news_author;
+DELETE from index_news_title;
 ```
 
 # Test users:
