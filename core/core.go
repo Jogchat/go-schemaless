@@ -132,7 +132,7 @@ func (kv *KVStore) GetCellsByFieldLatest(ctx context.Context, columnKey string, 
 }
 
 // PutCell
-func (kv *KVStore) PutCell(ctx context.Context, rowKey []byte, columnKey string, refKey int64, cell models.Cell) error {
+func (kv *KVStore) PutCell(ctx context.Context, rowKey []byte, columnKey string, refKey int64, cell models.Cell, ignore_fields ...string) error {
 	var storage *mysql.Storage
 
 	kv.mu.Lock()
@@ -142,13 +142,13 @@ func (kv *KVStore) PutCell(ctx context.Context, rowKey []byte, columnKey string,
 		shard := kv.migration.Choose(string(rowKey))
 		storage = kv.mstorages[shard]
 
-		return (*storage).PutCell(ctx, rowKey, columnKey, refKey, cell)
+		return (*storage).PutCell(ctx, rowKey, columnKey, refKey, cell, ignore_fields...)
 	}
 
 	shard := kv.continuum.Choose(string(rowKey))
 	storage = kv.storages[shard]
 
-	return (*storage).PutCell(ctx, rowKey, columnKey, refKey, cell)
+	return (*storage).PutCell(ctx, rowKey, columnKey, refKey, cell, ignore_fields...)
 }
 
 func (kv *KVStore) PartitionRead(ctx context.Context, partitionNumber int, location string, value interface{}, limit int) (cells []models.Cell, found bool, err error) {

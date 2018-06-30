@@ -315,20 +315,27 @@ func (s *Storage) GetCellsByFieldLatest(ctx context.Context, columnKey string, f
 }
 
 
-func (s *Storage) putAllIndex(ctx context.Context, rowKey []byte, columnKey string, cell models.Cell) {
+func (s *Storage) putAllIndex(ctx context.Context, rowKey []byte, columnKey string, cell models.Cell, ignore_fields ...string) {
 	var body map[string]interface{}
 	err := json.Unmarshal(cell.Body, &body)
 	utils.CheckErr(err)
 
+	ignore_fields_ := make(map[string]bool)
+	for _, field := range ignore_fields {
+		ignore_fields_[field] = true
+	}
+
 	for field, value := range body {
-		table := s.CheckAddIndex(columnKey, field)
-		// TODO: this is hacky
-		if field == "id" {
-			id, err := uuid.FromString(value.(string))
-			utils.CheckErr(err)
-			table.PutIndex(ctx, rowKey, id.Bytes())
-		} else {
-			table.PutIndex(ctx, rowKey, value)
+		if _, ok := ignore_fields_[field]; !ok {
+			table := s.CheckAddIndex(columnKey, field)
+			// TODO: this is hacky
+			if field == "id" {
+				id, err := uuid.FromString(value.(string))
+				utils.CheckErr(err)
+				table.PutIndex(ctx, rowKey, id.Bytes())
+			} else {
+				table.PutIndex(ctx, rowKey, value)
+			}
 		}
 	}
 }
@@ -342,7 +349,7 @@ func (s *Storage) CheckAddIndex(columnKey string, field string) *Index {
 	return table
 }
 
-func (s *Storage) PutCell(ctx context.Context, rowKey []byte, columnKey string, refKey int64, cell models.Cell) (err error) {
+func (s *Storage) PutCell(ctx context.Context, rowKey []byte, columnKey string, refKey int64, cell models.Cell, ignore_fileds ...string) (err error) {
 	var stmt *sql.Stmt
 	stmt, err = s.store.PrepareContext(ctx, putCellSQL)
 	if err != nil {
@@ -367,7 +374,7 @@ func (s *Storage) PutCell(ctx context.Context, rowKey []byte, columnKey string, 
 	// TODO(rbastic): Should we side-affect the cell and record the AddedAt?
 	s.Sugar.Infof("ID = %d, affected = %d\n", lastID, rowCnt)
 
-	s.putAllIndex(ctx, rowKey, columnKey, cell)
+	s.putAllIndex(ctx, rowKey, columnKey, cell, ignore_fileds...)
 	return
 }
 
