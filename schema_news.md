@@ -7,6 +7,8 @@ CREATE TABLE news(
     timestamp BIGINT NOT NULL,
     author VARCHAR(255) NOT NULL,
     title VARCHAR(1024) NOT NULL, 
+    summary VARCHAR() NOT NULL,
+    url VARCHAR(2083) NOT NULL,
 );
 
 CREATE TABLE index_news_domain(
@@ -36,3 +38,4 @@ CREATE TABLE index_news_title(
 * Note that CREATE TABLE news() would not be used in the database, it would be a virtual table for reference only, all index tables are in database.
 * Note that index_news_domain's (domain VARCHAR) can be school, company domain or topics (e.g. world cup, NBA) 
 * all of these should be unique
+* Note longest url is 2083 characters: https://stackoverflow.com/questions/219569/best-database-field-type-for-a-url
