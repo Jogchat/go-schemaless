@@ -131,6 +131,32 @@ func (kv *KVStore) GetCellsByFieldLatest(ctx context.Context, columnKey string, 
 	return cells, found, nil
 }
 
+func (kv *KVStore) CheckValueExist(ctx context.Context, columnKey string, field string, value interface{}) (exist bool, err error) {
+	kv.mu.Lock()
+	defer kv.mu.Unlock()
+
+	var wg sync.WaitGroup
+	wg.Add(len(kv.storages))
+	exist = false
+	err = nil
+
+	for _, storage := range kv.storages {
+		go func() {
+			exist_, err_ := storage.CheckValueExist(ctx, columnKey, field, value)
+			if exist_ {
+				exist = true
+			}
+			if err_ != nil {
+				err = err_
+			}
+			wg.Done()
+		}()
+	}
+	wg.Wait()
+
+	return exist, err
+}
+
 // PutCell
 func (kv *KVStore) PutCell(ctx context.Context, rowKey []byte, columnKey string, refKey int64, cell models.Cell, ignore_fields ...string) error {
 	var storage *mysql.Storage

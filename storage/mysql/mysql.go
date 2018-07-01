@@ -299,7 +299,7 @@ func (s *Storage) PartitionRead(ctx context.Context, partitionNumber int, locati
 
 func (s *Storage) GetCellsByFieldLatest(ctx context.Context, columnKey string, field string, value interface{}) (cells []models.Cell, found bool, err error) {
 	// Add Index table if not exist
-	table := s.CheckAddIndex(columnKey, field)
+	table := s.checkAddIndex(columnKey, field)
 
 	rowKeys := table.QueryByField(ctx, value)
 	if len(rowKeys) == 0 {
@@ -314,6 +314,13 @@ func (s *Storage) GetCellsByFieldLatest(ctx context.Context, columnKey string, f
 	return cells, true, nil
 }
 
+func (s *Storage) CheckValueExist(ctx context.Context, columnKey string, field string, value interface{}) (found bool, err error) {
+	table := s.getIndex(columnKey, field)
+	if table == nil {
+		return false, errors.New("invalid field")
+	}
+	return table.CheckValueExist(ctx, value), nil
+}
 
 func (s *Storage) putAllIndex(ctx context.Context, rowKey []byte, columnKey string, cell models.Cell, ignore_fields ...string) {
 	var body map[string]interface{}
@@ -327,7 +334,7 @@ func (s *Storage) putAllIndex(ctx context.Context, rowKey []byte, columnKey stri
 
 	for field, value := range body {
 		if _, ok := ignore_fields_[field]; !ok {
-			table := s.CheckAddIndex(columnKey, field)
+			table := s.checkAddIndex(columnKey, field)
 			// TODO: this is hacky
 			if field == "id" {
 				id, err := uuid.FromString(value.(string))
@@ -340,11 +347,17 @@ func (s *Storage) putAllIndex(ctx context.Context, rowKey []byte, columnKey stri
 	}
 }
 
-func (s *Storage) CheckAddIndex(columnKey string, field string) *Index {
+func (s *Storage) checkAddIndex(columnKey string, field string) *Index {
 	tableName := utils.IndexTableName(columnKey, field)
 	if _, ok := s.indexes[tableName]; !ok {
 		s.indexes[tableName] = NewIndex(columnKey, field, s.store)
 	}
+	table, _ := s.indexes[tableName]
+	return table
+}
+
+func (s *Storage) getIndex(columnKey string, field string) *Index {
+	tableName := utils.IndexTableName(columnKey, field)
 	table, _ := s.indexes[tableName]
 	return table
 }
