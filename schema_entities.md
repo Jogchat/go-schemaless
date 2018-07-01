@@ -13,7 +13,7 @@ CREATE TABLE users(
    activate boolean
 );
 ```
-*note that password field should not be indexed.
+* note that password field should not be indexed.
 
 Below are index tables for users
 
