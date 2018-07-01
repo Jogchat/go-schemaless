@@ -4,7 +4,8 @@
 CREATE TABLE news(
     id BINARY(16) PRIMARY KEY,
     domain VARCHAR(63) NOT NULL,
-    
+    timestamp BIGINT NOT NULL,
+    author VARCHAR(256) NOT NULL,
 );
 
 CREATE TABLE index_news_domain(
@@ -31,6 +32,6 @@ CREATE TABLE index_news_title(
     PRIMARY KEY (title, row_key)
 ) ENGINE=InnoDB;
 ```
-
+* Note that CREATE TABLE news() would not be used in the database, it would be a virtual table for reference only, all index tables are in database.
 * Note that index_news_domain's (domain VARCHAR) can be school, company domain or topics (e.g. world cup, NBA) 
 * all of these should be unique
