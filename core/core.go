@@ -7,7 +7,7 @@ import (
 	"code.jogchat.internal/go-schemaless/models"
 	"sync"
 	"code.jogchat.internal/dgryski-go-metro"
-	"code.jogchat.internal/go-schemaless/utils"
+	"code.jogchat.internal/golang_backend/utils"
 )
 
 // KVStore is a sharded key-value store
@@ -113,16 +113,31 @@ func (kv *KVStore) GetCellLatest(ctx context.Context, rowKey []byte, columnKey s
 
 func (kv *KVStore) GetCellsByFieldLatest(ctx context.Context, columnKey string, field string, value interface{}) (cells []models.Cell, found bool, err error) {
 	kv.mu.Lock()
-	defer kv.mu.Unlock()
+	for _, storage := range kv.storages {
+		storage.AddIndex(columnKey, field)
+	}
+	kv.mu.Unlock()
+
+	kv.mu.RLock()
+	defer kv.mu.RUnlock()
+
+	var wg sync.WaitGroup
+	wg.Add(len(kv.storages))
+	var cells_mu sync.Mutex
 
 	for _, storage := range kv.storages {
-		cells_, found, err := (*storage).GetCellsByFieldLatest(ctx, columnKey, field, value)
-		if !found {
-			continue
-		}
-		utils.CheckErr(err)
-		cells = append(cells, cells_...)
+		go func() {
+			cells_, found, err := (*storage).GetCellsByFieldLatest(ctx, columnKey, field, value)
+			if found {
+				utils.CheckErr(err)
+				cells_mu.Lock()
+				cells = append(cells, cells_...)
+				cells_mu.Unlock()
+			}
+			wg.Done()
+		}()
 	}
+	wg.Wait()
 
 	found = true
 	if len(cells) == 0 {
@@ -134,6 +149,12 @@ func (kv *KVStore) GetCellsByFieldLatest(ctx context.Context, columnKey string, 
 // Caution: if checking duplicate UUID, convert UUID to byte array before passing it to value
 func (kv *KVStore) CheckValueExist(ctx context.Context, columnKey string, field string, value interface{}) (exist bool, err error) {
 	kv.mu.Lock()
+	for _, storage := range kv.storages {
+		storage.AddIndex(columnKey, field)
+	}
+	kv.mu.Unlock()
+
+	kv.mu.RLock()
 	defer kv.mu.Unlock()
 
 	var wg sync.WaitGroup
