@@ -44,4 +44,4 @@ CREATE TABLE index_comment_parentCommentId(
 ) ENGINE=InnoDB;
 ```
 
-Note that all should be indexed including content, to prevent hackers keep saying spam words (e.g. thousands of fuck)
+* Note that all should be indexed including content, to prevent hackers keep saying spam words (e.g. thousands of fuck)
