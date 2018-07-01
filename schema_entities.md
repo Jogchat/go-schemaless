@@ -12,6 +12,7 @@ CREATE TABLE users(
    token BINARY(60),
    activate boolean
 );
+```
 
 Below are index tables for users
 
