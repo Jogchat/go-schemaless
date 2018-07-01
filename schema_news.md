@@ -10,6 +10,9 @@ CREATE TABLE news(
     summary VARCHAR(65535) NOT NULL,
     originUrl VARCHAR(2083) NOT NULL,
 );
+```
+* Note that summary, originalUrl should not be indexed
+```
 
 CREATE TABLE index_news_id(
     id BINARY(16) NOT NULL, 
