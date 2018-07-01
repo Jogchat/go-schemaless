@@ -206,7 +206,7 @@ func (s *Storage) GetCellsByFieldLatest(ctx context.Context, columnKey string, f
 }
 
 func (s *Storage) CheckValueExist(ctx context.Context, columnKey string, field string, value interface{}) (found bool, err error) {
-	table := s.getIndex(columnKey, field)
+	table := s.checkAddIndex(columnKey, field)
 	if table == nil {
 		return false, errors.New("invalid field")
 	}
@@ -236,12 +236,6 @@ func (s *Storage) checkAddIndex(columnKey string, field string) *Index {
 	if _, ok := s.indexes[tableName]; !ok {
 		s.indexes[tableName] = NewIndex(columnKey, field, s.store)
 	}
-	table, _ := s.indexes[tableName]
-	return table
-}
-
-func (s *Storage) getIndex(columnKey string, field string) *Index {
-	tableName := utils.IndexTableName(columnKey, field)
 	table, _ := s.indexes[tableName]
 	return table
 }

@@ -133,8 +133,8 @@ func (kv *KVStore) GetCellsByFieldLatest(ctx context.Context, columnKey string, 
 
 // Caution: if checking duplicate UUID, convert UUID to byte array before passing it to value
 func (kv *KVStore) CheckValueExist(ctx context.Context, columnKey string, field string, value interface{}) (exist bool, err error) {
-	kv.mu.RLock()
-	defer kv.mu.RUnlock()
+	kv.mu.Lock()
+	defer kv.mu.Unlock()
 
 	var wg sync.WaitGroup
 	wg.Add(len(kv.storages))
