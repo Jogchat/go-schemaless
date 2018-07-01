@@ -47,8 +47,7 @@ func (i *Index) QueryByField(ctx context.Context, value interface{}) [][]byte {
 // Check if value exist in index table, return true if value already exist
 func (i *Index) CheckValueExist(ctx context.Context, value interface{}) bool {
 	stmt := fmt.Sprintf(queryIndexSQL, utils.IndexTableName(i.Column, i.Field), i.Field)
-	results, err := i.conn.ExecContext(ctx, stmt, value)
+	results, err := i.conn.QueryContext(ctx, stmt, value)
 	utils.CheckErr(err)
-	affected, _ := results.RowsAffected()
-	return affected != 0
+	return results.Next()
 }

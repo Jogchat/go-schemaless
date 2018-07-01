@@ -12,7 +12,6 @@ import (
 	"time"
 	"encoding/json"
 	"code.jogchat.internal/go-schemaless/utils"
-	"github.com/satori/go.uuid"
 )
 
 // Storage is a MySQL-backed storage.
@@ -227,14 +226,7 @@ func (s *Storage) putAllIndex(ctx context.Context, rowKey []byte, columnKey stri
 	for field, value := range body {
 		if _, ok := ignore_fields_[field]; !ok {
 			table := s.checkAddIndex(columnKey, field)
-			// TODO: this is hacky
-			if field == "id" {
-				id, err := uuid.FromString(value.(string))
-				utils.CheckErr(err)
-				table.PutIndex(ctx, rowKey, id.Bytes())
-			} else {
-				table.PutIndex(ctx, rowKey, value)
-			}
+			table.PutIndex(ctx, rowKey, value)
 		}
 	}
 }
