@@ -40,18 +40,6 @@ CREATE TABLE index_news_title(
     row_key BINARY(16) NOT NULL UNIQUE, 
     PRIMARY KEY (title, row_key)
 ) ENGINE=InnoDB;
-
-CREATE TABLE index_news_summary(
-    summary VARCHAR(65535) NOT NULL, 
-    row_key BINARY(16) NOT NULL UNIQUE, 
-    PRIMARY KEY (summary, row_key)
-) ENGINE=InnoDB;
-
-CREATE TABLE index_news_originUrl(
-    originUrl VARCHAR(65535) NOT NULL, 
-    row_key BINARY(16) NOT NULL UNIQUE, 
-    PRIMARY KEY (originUrl, row_key)
-) ENGINE=InnoDB;
 ```
 
 * Note that CREATE TABLE news() would not be used in the database, it would be a virtual table for reference only, all index tables are in database.
@@ -59,3 +47,4 @@ CREATE TABLE index_news_originUrl(
 * all of these should be unique
 * Note longest url is 2083 characters: https://stackoverflow.com/questions/219569/best-database-field-type-for-a-url
 * Marked summary as 65535 length which is the length of longest varchar in mysql
+* Summary, originalUrl should not be indexed
