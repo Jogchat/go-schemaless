@@ -1,4 +1,4 @@
-# Below are index tables for news
+# Table for news
 
 ```
 CREATE TABLE news(
@@ -11,6 +11,8 @@ CREATE TABLE news(
     originUrl VARCHAR(2083) NOT NULL,
 );
 ```
+# Below are index tables for news 
+
 * Note that summary, originalUrl should not be indexed
 ```
 
