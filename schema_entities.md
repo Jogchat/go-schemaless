@@ -130,3 +130,4 @@ CREATE TABLE index_schools_name(
 ) ENGINE=InnoDB;
 ```
 
+* Note that (CREATE TABLE schools, CREATE TABLE companies, CREATE TABLE users) would not be used in the database, it would be a virtual table for reference only, all index tables are in database.
