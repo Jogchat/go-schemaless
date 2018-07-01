@@ -131,6 +131,7 @@ func (kv *KVStore) GetCellsByFieldLatest(ctx context.Context, columnKey string, 
 	return cells, found, nil
 }
 
+// Caution: if checking duplicate UUID, convert UUID to byte array before passing it to value
 func (kv *KVStore) CheckValueExist(ctx context.Context, columnKey string, field string, value interface{}) (exist bool, err error) {
 	kv.mu.Lock()
 	defer kv.mu.Unlock()
