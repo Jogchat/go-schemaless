@@ -41,12 +41,6 @@ CREATE TABLE index_users_phone(
     PRIMARY KEY (phone, row_key)
 ) ENGINE=InnoDB;
 
-CREATE TABLE index_users_password(
-    password BINARY(60) NOT NULL,
-    row_key  BINARY(16) NOT NULL UNIQUE,
-    PRIMARY KEY (password, row_key)
-) ENGINE=InnoDB;
-
 CREATE TABLE index_users_activate(
     activate BOOLEAN NOT NULL,
     row_key BINARY(16) NOT NULL UNIQUE,
