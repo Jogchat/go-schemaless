@@ -1,5 +1,12 @@
 # Below are index tables for news
+
 ```
+CREATE TABLE news(
+    id BINARY(16) PRIMARY KEY,
+    domain VARCHAR(63) NOT NULL,
+    
+);
+
 CREATE TABLE index_news_domain(
     domain VARCHAR(63) NOT NULL, 
     row_key BINARY(16) NOT NULL UNIQUE, 
