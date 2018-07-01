@@ -28,7 +28,7 @@ CREATE TABLE cell
 # Below are application level schema tables
 
 Schema entities for users, companies and schools:
-https://github.com/Jogchat/go-schemaless/blob/master/schema_entities.md
+* https://github.com/Jogchat/go-schemaless/blob/master/schema_entities.md
 
 ## Below are index tables for news
 ```
