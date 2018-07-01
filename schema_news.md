@@ -8,10 +8,10 @@ CREATE TABLE news(
     author VARCHAR(255) NOT NULL,
     title VARCHAR(1024) NOT NULL, 
     summary VARCHAR(65535) NOT NULL,
-    origin_url VARCHAR(2083) NOT NULL,
+    originUrl VARCHAR(2083) NOT NULL,
 );
 
-CREATE TABLE index_news_domain(
+CREATE TABLE index_news_id(
     id BINARY(16) NOT NULL, 
     row_key BINARY(16) NOT NULL UNIQUE, 
     PRIMARY KEY (id, row_key)
@@ -41,12 +41,19 @@ CREATE TABLE index_news_title(
     PRIMARY KEY (title, row_key)
 ) ENGINE=InnoDB;
 
-CREATE TABLE summary(
-    origin_url VARCHAR(2083) NOT NULL, 
+CREATE TABLE index_news_summary(
+    summary VARCHAR(65535) NOT NULL, 
     row_key BINARY(16) NOT NULL UNIQUE, 
-    PRIMARY KEY (title, row_key)
+    PRIMARY KEY (summary, row_key)
+) ENGINE=InnoDB;
+
+CREATE TABLE index_news_originUrl(
+    originUrl VARCHAR(65535) NOT NULL, 
+    row_key BINARY(16) NOT NULL UNIQUE, 
+    PRIMARY KEY (originUrl, row_key)
 ) ENGINE=InnoDB;
 ```
+
 * Note that CREATE TABLE news() would not be used in the database, it would be a virtual table for reference only, all index tables are in database.
 * Note that index_news_domain's (domain VARCHAR) can be school, company domain or topics (e.g. world cup, NBA) 
 * all of these should be unique
