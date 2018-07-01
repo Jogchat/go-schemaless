@@ -1,4 +1,4 @@
-# tables for news
+# Table for news
 
 ```
 CREATE TABLE news(
