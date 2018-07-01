@@ -37,6 +37,7 @@ DELETE from index_schools_name;
 
 # Clearning news
 ```
+DELETE from index_news_id;
 DELETE from index_news_domain;
 DELETE from index_news_timestamp;
 DELETE from index_news_author;
