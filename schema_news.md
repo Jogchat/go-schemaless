@@ -5,7 +5,8 @@ CREATE TABLE news(
     id BINARY(16) PRIMARY KEY,
     domain VARCHAR(63) NOT NULL,
     timestamp BIGINT NOT NULL,
-    author VARCHAR(256) NOT NULL,
+    author VARCHAR(255) NOT NULL,
+    title VARCHAR(1024) NOT NULL, 
 );
 
 CREATE TABLE index_news_domain(
@@ -21,7 +22,7 @@ CREATE TABLE index_news_timestamp(
 ) ENGINE=InnoDB;
 
 CREATE TABLE index_news_author(
-    author VARCHAR(256) NOT NULL, 
+    author VARCHAR(255) NOT NULL, 
     row_key BINARY(16) NOT NULL UNIQUE, 
     PRIMARY KEY (author, row_key)
 ) ENGINE=InnoDB;
