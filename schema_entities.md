@@ -1,4 +1,4 @@
-Schema entities for users, companies and schools
+# Schema entities for users, companies and schools
 
 users is a table storing all jogchat users
 
