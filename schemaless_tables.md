@@ -33,8 +33,8 @@ Schema entities for users, companies and schools:
 Below are index tables for news:
 * https://github.com/Jogchat/go-schemaless/blob/master/schema_news.md
 
-Index tables for comments:
-* https://github.com/Jogchat/go-schemaless/blob/master/schema_comments.md
+Index tables for comment:
+* https://github.com/Jogchat/go-schemaless/blob/master/schema_comment.md
 
 ## Note that:
 * Every email address is composed of two parts. The local part that comes before the '@' sign, and the domain part that follows it. In "user@example.com", the local part is "user", and the domain part is "example.com".
