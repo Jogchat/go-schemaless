@@ -29,7 +29,8 @@ CREATE TABLE cell
 
 Schema entities for users, companies and schools:
 * https://github.com/Jogchat/go-schemaless/blob/master/schema_entities.md
-Below are index tables for news
+
+Below are index tables for news:
 * https://github.com/Jogchat/go-schemaless/blob/master/schema_news.md
 
 ## Note that:
