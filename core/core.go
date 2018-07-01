@@ -19,7 +19,7 @@ type KVStore struct {
 	mstorages map[string]*mysql.Storage
 
 	// we avoid holding the lock during a call to a storage engine, which may block
-	mu	sync.Mutex
+	mu	sync.RWMutex
 }
 
 // Chooser maps keys to shards
@@ -63,8 +63,8 @@ func (kv *KVStore) GetCell(ctx context.Context, rowKey []byte, columnKey string,
 	var storage *mysql.Storage
 	var migStorage *mysql.Storage
 
-	kv.mu.Lock()
-	defer kv.mu.Unlock()
+	kv.mu.RLock()
+	defer kv.mu.RUnlock()
 
 	if kv.migration != nil {
 		shard := kv.migration.Choose(string(rowKey))
@@ -87,8 +87,8 @@ func (kv *KVStore) GetCellLatest(ctx context.Context, rowKey []byte, columnKey s
 	var storage *mysql.Storage
 	var migStorage *mysql.Storage
 
-	kv.mu.Lock()
-	defer kv.mu.Unlock()
+	kv.mu.RLock()
+	defer kv.mu.RUnlock()
 
 	if kv.migration != nil {
 		shard := kv.migration.Choose(string(rowKey))
@@ -133,8 +133,8 @@ func (kv *KVStore) GetCellsByFieldLatest(ctx context.Context, columnKey string, 
 
 // Caution: if checking duplicate UUID, convert UUID to byte array before passing it to value
 func (kv *KVStore) CheckValueExist(ctx context.Context, columnKey string, field string, value interface{}) (exist bool, err error) {
-	kv.mu.Lock()
-	defer kv.mu.Unlock()
+	kv.mu.RLock()
+	defer kv.mu.RUnlock()
 
 	var wg sync.WaitGroup
 	wg.Add(len(kv.storages))
@@ -178,50 +178,6 @@ func (kv *KVStore) PutCell(ctx context.Context, rowKey []byte, columnKey string,
 	return (*storage).PutCell(ctx, rowKey, columnKey, refKey, cell, ignore_fields...)
 }
 
-func (kv *KVStore) PartitionRead(ctx context.Context, partitionNumber int, location string, value interface{}, limit int) (cells []models.Cell, found bool, err error) {
-
-	kv.mu.Lock()
-	defer kv.mu.Unlock()
-
-	if kv.migration != nil {
-		buckets := kv.migration.Buckets()
-		shard := buckets[partitionNumber]
-		migStorage := kv.mstorages[shard]
-
-		if migStorage != nil {
-			return (*migStorage).PartitionRead(ctx, partitionNumber, location, value, limit)
-		}
-	}
-
-	buckets := kv.continuum.Buckets()
-	shard := buckets[partitionNumber]
-	storage := kv.storages[shard]
-
-	return (*storage).PartitionRead(ctx, partitionNumber, location, value, limit)
-}
-
-// ResetConnection implements Storage.ResetConnection()
-func (kv *KVStore) ResetConnection(ctx context.Context, key string) error {
-	kv.mu.Lock()
-	defer kv.mu.Unlock()
-
-	if kv.migration != nil {
-		shard := kv.migration.Choose(key)
-		migStorage := kv.mstorages[shard]
-
-		if migStorage != nil {
-			err := (*migStorage).ResetConnection(ctx, key)
-			if err != nil {
-				return err
-			}
-		}
-	}
-	shard := kv.continuum.Choose(key)
-	storage := kv.storages[shard]
-
-	return (*storage).ResetConnection(ctx, key)
-}
-
 // Destroy implements Storage.Destroy()
 func (kv *KVStore) Destroy(ctx context.Context) error {
 	kv.mu.Lock()
@@ -259,48 +215,4 @@ func (kv *KVStore) DeleteShard(shard string) {
 	defer kv.mu.Unlock()
 
 	delete(kv.storages, shard)
-}
-
-// BeginMigration begins a continuum migration.  All the shards in the new
-// continuum must already be known to the KVStore via AddShard().
-func (kv *KVStore) BeginMigration(continuum Chooser) {
-
-	kv.mu.Lock()
-	defer kv.mu.Unlock()
-
-	kv.migration = continuum
-	kv.mstorages = kv.storages
-}
-
-// BeginMigrationWithShards begins a continuum migration using the new set of shards.
-func (kv *KVStore) BeginMigrationWithShards(continuum Chooser, shards []Shard) {
-
-	kv.mu.Lock()
-	defer kv.mu.Unlock()
-
-	var buckets []string
-	mstorages := make(map[string]*mysql.Storage)
-	for _, shard := range shards {
-		buckets = append(buckets, shard.Name)
-		mstorages[shard.Name] = shard.Backend
-	}
-
-	continuum.SetBuckets(buckets)
-
-	kv.migration = continuum
-	kv.mstorages = mstorages
-}
-
-// EndMigration ends a continuum migration and marks the migration continuum
-// as the new primary
-func (kv *KVStore) EndMigration() {
-
-	kv.mu.Lock()
-	defer kv.mu.Unlock()
-
-	kv.continuum = kv.migration
-	kv.migration = nil
-
-	kv.storages = kv.mstorages
-	kv.mstorages = nil
 }

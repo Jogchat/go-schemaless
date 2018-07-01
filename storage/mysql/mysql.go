@@ -9,7 +9,6 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"code.jogchat.internal/go-schemaless/models"
 	"go.uber.org/zap"
-	"reflect"
 	"time"
 	"encoding/json"
 	"code.jogchat.internal/go-schemaless/utils"
@@ -41,7 +40,6 @@ const (
 
 	getCellSQL          = "SELECT added_at, row_key, column_name, ref_key, body,created_at FROM cell WHERE row_key = ? AND column_name = ? AND ref_key = ? LIMIT 1"
 	getCellLatestSQL    = "SELECT added_at, row_key, column_name, ref_key, body, created_at FROM cell WHERE row_key = ? AND column_name = ? ORDER BY ref_key DESC LIMIT 1"
-	getCellsForShardSQL = "SELECT added_at, row_key, column_name, ref_key, body, created_at FROM cell WHERE %s > %s LIMIT %d"
 	putCellSQL          = "INSERT INTO cell ( row_key, column_name, ref_key, body ) VALUES(?, ?, ?, ?)"
 	insertIndexSQL		= "INSERT INTO %s (row_key, %s) VALUES (?, ?) ON DUPLICATE KEY UPDATE %s = ?"
 	queryIndexSQL		= "SELECT row_key FROM %s WHERE %s = ?"
@@ -191,112 +189,6 @@ func (s *Storage) GetCellLatest(ctx context.Context, rowKey []byte, columnKey st
 	return cell, found, nil
 }
 
-func (s *Storage) PartitionRead(ctx context.Context, partitionNumber int, location string, value interface{}, limit int) (cells []models.Cell, found bool, err error) {
-
-	var (
-		resAddedAt   int64
-		resRowKey    []byte
-		resColName   string
-		resRefKey    int64
-		resBody      []byte
-		resCreatedAt *time.Time
-
-		locationColumn string
-		valueStr string
-	)
-
-	switch location {
-	case "timestamp":
-		fallthrough
-	case "created_at":
-		locationColumn = "created_at"
-		switch value.(type) {
-		case *time.Time:
-			t := value.(*time.Time)
-			valueStr = t.Format(timeParseString)
-			if valueStr == "" {
-				err = fmt.Errorf("PartitionRead had empty value after formatting *time.Time:'%v'", t)
-				return
-			}
-		case time.Time:
-			t := value.(time.Time)
-			valueStr = t.Format(timeParseString)
-			if valueStr == "" {
-				err = fmt.Errorf("PartitionRead had empty value after formatting time.Time:'%v'", t)
-				return
-			}
-		case string:
-			s.Sugar.Infow("let me guess, it's a string")
-			t := value.(string)
-			valueStr = t
-			if valueStr == "" {
-				err = fmt.Errorf("PartitionRead had empty value after formatting string:'%v'", t)
-				return
-			}
-		default:
-			err = fmt.Errorf("PartitionRead had unrecognized type %v", reflect.TypeOf(value))
-			return
-		}
-		valueStr = "'" + valueStr + "'"
-	case "added_at":
-		locationColumn = "added_at"
-		switch value.(type) {
-		case int:
-			t := value.(int)
-			valueStr = fmt.Sprintf("%d", t)
-		case int64:
-			t := value.(int64)
-			valueStr = fmt.Sprintf("%d", t)
-		case string:
-			t := value.(string)
-			valueStr = fmt.Sprintf("%s", t)
-			return
-		default:
-			err = fmt.Errorf("PartitionRead had unrecognized type %v", reflect.TypeOf(value))
-			return
-		}
-	default:
-		err = errors.New("PartitionRead had unrecognized location " + location)
-		return
-	}
-
-	sqlStr := fmt.Sprintf(getCellsForShardSQL, locationColumn, valueStr, limit)
-
-	var rows *sql.Rows
-	s.Sugar.Infow("PartitionRead", "query", sqlStr, "valueStr", valueStr)
-	rows, err = s.store.QueryContext(ctx, sqlStr)
-	if err != nil {
-		return
-	}
-	defer rows.Close()
-
-	found = false
-	for rows.Next() {
-		err = rows.Scan(&resAddedAt, &resRowKey, &resColName, &resRefKey, &resBody, &resCreatedAt)
-		if err != nil {
-			return
-		}
-		s.Sugar.Infow("PartitionRead: scanned data", "AddedAt", resAddedAt, "RowKey", resRowKey, "ColName", resColName, "RefKey", resRefKey, "Body", resBody, "CreatedAt", resCreatedAt)
-
-		var cell models.Cell
-		cell.AddedAt = resAddedAt
-		cell.RowKey = resRowKey
-		cell.ColumnName = resColName
-		cell.RefKey = resRefKey
-		cell.Body = resBody
-		cell.CreatedAt = resCreatedAt
-		cells = append(cells, cell)
-		found = true
-	}
-
-	err = rows.Err()
-	if err != nil {
-		return
-	}
-
-	return cells, found, nil
-}
-
 func (s *Storage) GetCellsByFieldLatest(ctx context.Context, columnKey string, field string, value interface{}) (cells []models.Cell, found bool, err error) {
 	// Add Index table if not exist
 	table := s.checkAddIndex(columnKey, field)
@@ -389,11 +281,6 @@ func (s *Storage) PutCell(ctx context.Context, rowKey []byte, columnKey string, 
 
 	s.putAllIndex(ctx, rowKey, columnKey, cell, ignore_fileds...)
 	return
-}
-
-// ResetConnection does not destroy the store for in-memory stores.
-func (s *Storage) ResetConnection(ctx context.Context, key string) error {
-	return nil
 }
 
 // Destroy closes the in-memory store, and is a completely destructive operation.
