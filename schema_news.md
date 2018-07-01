@@ -12,6 +12,12 @@ CREATE TABLE news(
 );
 
 CREATE TABLE index_news_domain(
+    id BINARY(16) NOT NULL, 
+    row_key BINARY(16) NOT NULL UNIQUE, 
+    PRIMARY KEY (id, row_key)
+) ENGINE=InnoDB;
+
+CREATE TABLE index_news_domain(
     domain VARCHAR(63) NOT NULL, 
     row_key BINARY(16) NOT NULL UNIQUE, 
     PRIMARY KEY (domain, row_key)
@@ -31,6 +37,12 @@ CREATE TABLE index_news_author(
 
 CREATE TABLE index_news_title(
     title VARCHAR(1024) NOT NULL, 
+    row_key BINARY(16) NOT NULL UNIQUE, 
+    PRIMARY KEY (title, row_key)
+) ENGINE=InnoDB;
+
+CREATE TABLE summary(
+    origin_url VARCHAR(2083) NOT NULL, 
     row_key BINARY(16) NOT NULL UNIQUE, 
     PRIMARY KEY (title, row_key)
 ) ENGINE=InnoDB;
