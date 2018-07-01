@@ -32,6 +32,12 @@ Schema entities for users, companies and schools:
 
 ## Below are index tables for news
 ```
+CREATE TABLE index_news_id(
+    id BINARY(16) NOT NULL, 
+    row_key BINARY(16) NOT NULL UNIQUE, 
+    PRIMARY KEY (id, row_key)
+) ENGINE=InnoDB;
+
 CREATE TABLE index_news_domain(
     domain VARCHAR(64) NOT NULL, 
     row_key BINARY(16) NOT NULL UNIQUE, 
