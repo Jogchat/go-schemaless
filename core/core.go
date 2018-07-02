@@ -121,23 +121,13 @@ func (kv *KVStore) GetCellsByFieldLatest(ctx context.Context, columnKey string, 
 	kv.mu.RLock()
 	defer kv.mu.RUnlock()
 
-	var wg sync.WaitGroup
-	wg.Add(len(kv.storages))
-	var cells_mu sync.Mutex
-
 	for _, storage := range kv.storages {
-		go func() {
-			cells_, found, err := (*storage).GetCellsByFieldLatest(ctx, columnKey, field, value)
-			if found {
-				utils.CheckErr(err)
-				cells_mu.Lock()
-				cells = append(cells, cells_...)
-				cells_mu.Unlock()
-			}
-			wg.Done()
-		}()
+		cells_, found, err := (*storage).GetCellsByFieldLatest(ctx, columnKey, field, value)
+		if found {
+			utils.CheckErr(err)
+			cells = append(cells, cells_...)
+		}
 	}
-	wg.Wait()
 
 	found = true
 	if len(cells) == 0 {
@@ -157,27 +147,18 @@ func (kv *KVStore) CheckValueExist(ctx context.Context, columnKey string, field 
 	kv.mu.RLock()
 	defer kv.mu.RUnlock()
 
-	var wg sync.WaitGroup
-	wg.Add(len(kv.storages))
-	var exist_mu sync.Mutex
 	exist = false
 	err = nil
 
 	for _, storage := range kv.storages {
-		go func() {
-			exist_, err_ := storage.CheckValueExist(ctx, columnKey, field, value)
-			exist_mu.Lock()
-			if exist_ {
-				exist = true
-			}
-			if err_ != nil {
-				err = err_
-			}
-			exist_mu.Unlock()
-			wg.Done()
-		}()
+		exist_, err_ := storage.CheckValueExist(ctx, columnKey, field, value)
+		if exist_ {
+			exist = true
+		}
+		if err_ != nil {
+			err = err_
+		}
 	}
-	wg.Wait()
 
 	return exist, err
 }
