@@ -155,7 +155,7 @@ func (kv *KVStore) CheckValueExist(ctx context.Context, columnKey string, field 
 	kv.mu.Unlock()
 
 	kv.mu.RLock()
-	defer kv.mu.Unlock()
+	defer kv.mu.RUnlock()
 
 	var wg sync.WaitGroup
 	wg.Add(len(kv.storages))
