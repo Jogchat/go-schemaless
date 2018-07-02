@@ -20,7 +20,7 @@ CREATE TABLE index_comment_id(
 ) ENGINE=InnoDB;
 
 CREATE TABLE index_comment_newsId(
-    newsId BINARY(16) NOT NULL,
+    newsId VARCHAR(36) NOT NULL,
     row_key BINARY(16) NOT NULL UNIQUE, 
     PRIMARY KEY (newsId, row_key)
 ) ENGINE=InnoDB;
