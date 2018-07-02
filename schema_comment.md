@@ -2,7 +2,7 @@
 
 ```
 CREATE TABLE comment(
-    id BINARY(16) PRIMARY KEY,
+    id VARCHAR(36) PRIMARY KEY,
     newsId BINARY(16) NOT NULL,
     content VARCHAR(300) NOT NULL,
     timestamp BIGINT NOT NULL,
@@ -14,7 +14,7 @@ Note that summary, originalUrl should not be indexed
 
 ```
 CREATE TABLE index_comment_id(
-    id BINARY(16) NOT NULL, 
+    id VARCHAR(36) NOT NULL, 
     row_key BINARY(16) NOT NULL UNIQUE, 
     PRIMARY KEY (id, row_key)
 ) ENGINE=InnoDB;
