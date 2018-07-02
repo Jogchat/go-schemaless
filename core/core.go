@@ -159,18 +159,21 @@ func (kv *KVStore) CheckValueExist(ctx context.Context, columnKey string, field 
 
 	var wg sync.WaitGroup
 	wg.Add(len(kv.storages))
+	var exist_mu sync.Mutex
 	exist = false
 	err = nil
 
 	for _, storage := range kv.storages {
 		go func() {
 			exist_, err_ := storage.CheckValueExist(ctx, columnKey, field, value)
+			exist_mu.Lock()
 			if exist_ {
 				exist = true
 			}
 			if err_ != nil {
 				err = err_
 			}
+			exist_mu.Unlock()
 			wg.Done()
 		}()
 	}
