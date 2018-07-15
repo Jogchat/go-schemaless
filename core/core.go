@@ -136,6 +136,31 @@ func (kv *KVStore) GetCellsByFieldLatest(ctx context.Context, columnKey string, 
 	return cells, found, nil
 }
 
+func (kv *KVStore) GetCellsByColumnLatest(ctx context.Context, columnKey string) (cells []models.Cell, found bool, err error) {
+	kv.mu.Lock()
+	for _, storage := range kv.storages {
+		storage.AddIndex(columnKey, "id")
+	}
+	kv.mu.Unlock()
+
+	kv.mu.RLock()
+	defer kv.mu.RUnlock()
+
+	for _, storage := range kv.storages {
+		cells_, found, err := (*storage).GetCellsByColumnLatest(ctx, columnKey)
+		if found {
+			utils.CheckErr(err)
+			cells = append(cells, cells_...)
+		}
+	}
+
+	found = true
+	if len(cells) == 0 {
+		found = false
+	}
+	return cells, found, nil
+}
+
 // Caution: if checking duplicate UUID, convert UUID to byte array before passing it to value
 func (kv *KVStore) CheckValueExist(ctx context.Context, columnKey string, field string, value interface{}) (exist bool, err error) {
 	kv.mu.Lock()

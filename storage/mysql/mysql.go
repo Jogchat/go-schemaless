@@ -42,6 +42,7 @@ const (
 	putCellSQL          = "INSERT INTO cell ( row_key, column_name, ref_key, body ) VALUES(?, ?, ?, ?)"
 	insertIndexSQL		= "INSERT INTO %s (row_key, %s) VALUES (?, ?) ON DUPLICATE KEY UPDATE %s = ?"
 	queryIndexSQL		= "SELECT row_key FROM %s WHERE %s = ?"
+	queryIndexAllSQL	= "SELECT row_key FROM %s"
 )
 
 func exec(db *sql.DB, sqlStr string) error {
@@ -186,6 +187,23 @@ func (s *Storage) GetCellLatest(ctx context.Context, rowKey []byte, columnKey st
 	}
 
 	return cell, found, nil
+}
+
+func (s *Storage) GetCellsByColumnLatest(ctx context.Context, columnKey string) (cells []models.Cell, found bool, err error) {
+	// Add Index table if not exist
+	table := s.getIndex(columnKey, "id")
+
+	rowKeys := table.QueryAll(ctx)
+	if len(rowKeys) == 0 {
+		return cells, false, nil
+	}
+
+	for _, rowKey := range rowKeys {
+		cell, _, err := s.GetCellLatest(ctx, rowKey, columnKey)
+		utils.CheckErr(err)
+		cells = append(cells, cell)
+	}
+	return cells, true, nil
 }
 
 func (s *Storage) GetCellsByFieldLatest(ctx context.Context, columnKey string, field string, value interface{}) (cells []models.Cell, found bool, err error) {

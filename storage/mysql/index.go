@@ -33,11 +33,21 @@ func (i *Index) QueryByField(ctx context.Context, value interface{}) [][]byte {
 	stmt := fmt.Sprintf(queryIndexSQL, utils.IndexTableName(i.Column, i.Field), i.Field)
 	rows, err := i.conn.QueryContext(ctx, stmt, value)
 	utils.CheckErr(err)
-	var rowKeys [][]byte
+	return extractRowKeys(rows)
+}
 
+func (i *Index) QueryAll(ctx context.Context) [][]byte {
+	stmt := fmt.Sprintf(queryIndexAllSQL, utils.IndexTableName(i.Column, i.Field))
+	rows, err := i.conn.QueryContext(ctx, stmt)
+	utils.CheckErr(err)
+	return extractRowKeys(rows)
+}
+
+func extractRowKeys(rows *sql.Rows) [][]byte {
+	var rowKeys [][]byte
 	for rows.Next() {
 		var rowKey []byte
-		err = rows.Scan(&rowKey)
+		err := rows.Scan(&rowKey)
 		utils.CheckErr(err)
 		rowKeys = append(rowKeys, rowKey)
 	}
