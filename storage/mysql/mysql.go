@@ -41,7 +41,7 @@ const (
 	getCellLatestSQL    = "SELECT added_at, row_key, column_name, ref_key, body, created_at FROM cell WHERE row_key = ? AND column_name = ? ORDER BY ref_key DESC LIMIT 1"
 	putCellSQL          = "INSERT INTO cell ( row_key, column_name, ref_key, body ) VALUES(?, ?, ?, ?)"
 	insertIndexSQL		= "INSERT INTO %s (row_key, %s) VALUES (?, ?) ON DUPLICATE KEY UPDATE %s = ?"
-	queryIndexSQL		= "SELECT row_key FROM %s WHERE %s = ?"
+	queryIndexSQL		= "SELECT row_key FROM %s WHERE %s %s ?"
 	queryIndexAllSQL	= "SELECT row_key FROM %s"
 )
 
@@ -206,11 +206,11 @@ func (s *Storage) GetCellsByColumnLatest(ctx context.Context, columnKey string) 
 	return cells, true, nil
 }
 
-func (s *Storage) GetCellsByFieldLatest(ctx context.Context, columnKey string, field string, value interface{}) (cells []models.Cell, found bool, err error) {
+func (s *Storage) GetCellsByFieldLatest(ctx context.Context, columnKey string, field string, value interface{}, operator string) (cells []models.Cell, found bool, err error) {
 	// Add Index table if not exist
 	table := s.getIndex(columnKey, field)
 
-	rowKeys := table.QueryByField(ctx, value)
+	rowKeys := table.QueryByField(ctx, value, operator)
 	if len(rowKeys) == 0 {
 		return cells, false, nil
 	}

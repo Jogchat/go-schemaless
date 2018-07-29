@@ -111,7 +111,7 @@ func (kv *KVStore) GetCellLatest(ctx context.Context, rowKey []byte, columnKey s
 	return (*storage).GetCellLatest(ctx, rowKey, columnKey)
 }
 
-func (kv *KVStore) GetCellsByFieldLatest(ctx context.Context, columnKey string, field string, value interface{}) (cells []models.Cell, found bool, err error) {
+func (kv *KVStore) GetCellsByFieldLatest(ctx context.Context, columnKey string, field string, value interface{}, operator string) (cells []models.Cell, found bool, err error) {
 	kv.mu.Lock()
 	for _, storage := range kv.storages {
 		storage.AddIndex(columnKey, field)
@@ -122,7 +122,7 @@ func (kv *KVStore) GetCellsByFieldLatest(ctx context.Context, columnKey string, 
 	defer kv.mu.RUnlock()
 
 	for _, storage := range kv.storages {
-		cells_, found, err := (*storage).GetCellsByFieldLatest(ctx, columnKey, field, value)
+		cells_, found, err := (*storage).GetCellsByFieldLatest(ctx, columnKey, field, value, operator)
 		if found {
 			utils.CheckErr(err)
 			cells = append(cells, cells_...)

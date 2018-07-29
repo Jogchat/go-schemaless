@@ -29,8 +29,8 @@ func (i *Index) PutIndex(ctx context.Context, rowKey []byte, value interface{}) 
 	utils.CheckErr(err)
 }
 
-func (i *Index) QueryByField(ctx context.Context, value interface{}) [][]byte {
-	stmt := fmt.Sprintf(queryIndexSQL, utils.IndexTableName(i.Column, i.Field), i.Field)
+func (i *Index) QueryByField(ctx context.Context, value interface{}, operator string) [][]byte {
+	stmt := fmt.Sprintf(queryIndexSQL, utils.IndexTableName(i.Column, i.Field), i.Field, operator)
 	rows, err := i.conn.QueryContext(ctx, stmt, value)
 	utils.CheckErr(err)
 	return extractRowKeys(rows)
@@ -56,7 +56,7 @@ func extractRowKeys(rows *sql.Rows) [][]byte {
 
 // Check if value exist in index table, return true if value already exist
 func (i *Index) CheckValueExist(ctx context.Context, value interface{}) bool {
-	stmt := fmt.Sprintf(queryIndexSQL, utils.IndexTableName(i.Column, i.Field), i.Field)
+	stmt := fmt.Sprintf(queryIndexSQL, utils.IndexTableName(i.Column, i.Field), i.Field, "=")
 	results, err := i.conn.QueryContext(ctx, stmt, value)
 	utils.CheckErr(err)
 	return results.Next()
