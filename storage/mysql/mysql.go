@@ -27,8 +27,6 @@ type Storage struct {
 }
 
 const (
-	//timeParseString = "2006-01-02T15:04:05Z"
-	timeParseString  = "2006-01-02 15:04:05"
 	driver = "mysql"
 	// dsnFormat string parameters: username, password, host, port, database.
 	// parseTime is for parsing and handling *time.Time properly
@@ -139,18 +137,41 @@ func (s *Storage) GetCellLatest(ctx context.Context, rowKey []byte, columnKey st
 }
 
 func (s *Storage) GetCellsByColumnLatest(ctx context.Context, columnKey string) (cells []models.Cell, found bool, err error) {
-	// Add Index table if not exist
-	rowKeys := QueryAll(ctx, s.store, columnKey, "id")
-	if len(rowKeys) == 0 {
-		return cells, false, nil
+	var (
+		resAddedAt   int64
+		resRowKey    []byte
+		resColName   string
+		resRefKey    int64
+		resBody      []byte
+		resCreatedAt *time.Time
+		cell models.Cell
+		rows         *sql.Rows
+	)
+	indexTable := utils.IndexTableName(columnKey, "id")
+	joinStmt := fmt.Sprintf(joinTableSQL, "cell", indexTable, "cell", indexTable)
+	queryStmt := fmt.Sprintf(getCellsLatestSQL, joinStmt, "row_key", "ref_key", "row_key")
+	rows, err = s.store.QueryContext(ctx, queryStmt)
+	if err != nil {
+		return nil, false, err
 	}
+	defer rows.Close()
 
-	for _, rowKey := range rowKeys {
-		cell, _, err := s.GetCellLatest(ctx, rowKey, columnKey)
-		utils.CheckErr(err)
+	found = false
+	for rows.Next() {
+		err = rows.Scan(&resAddedAt, &resRowKey, &resColName, &resRefKey, &resBody, &resCreatedAt)
+		if err != nil {
+			return
+		}
+		cell.AddedAt = resAddedAt
+		cell.RowKey = resRowKey
+		cell.ColumnName = resColName
+		cell.RefKey = resRefKey
+		cell.Body = resBody
+		cell.CreatedAt = resCreatedAt
 		cells = append(cells, cell)
+		found = true
 	}
-	return cells, true, nil
+	return cells, found, nil
 }
 
 func (s *Storage) GetCellByUniqueFieldLatest(ctx context.Context, columnKey string, field string, value interface{}) (cell models.Cell, found bool, err error) {
@@ -192,8 +213,6 @@ func (s *Storage) GetCellsByFieldLatest(ctx context.Context, columnKey string, f
 		if err != nil {
 			return
 		}
-		s.Sugar.Infow("GetCellLatest scanned data", "AddedAt", resAddedAt, "RowKey", resRowKey, "ColName", resColName, "RefKey", resRefKey, "Body", resBody, "CreatedAt", resCreatedAt)
-
 		cell.AddedAt = resAddedAt
 		cell.RowKey = resRowKey
 		cell.ColumnName = resColName
