@@ -4,7 +4,6 @@ package mysql
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"code.jogchat.internal/go-schemaless/models"
@@ -12,6 +11,7 @@ import (
 	"time"
 	"encoding/json"
 	"code.jogchat.internal/go-schemaless/utils"
+	"github.com/pkg/errors"
 )
 
 // Storage is a MySQL-backed storage.
@@ -23,7 +23,6 @@ type Storage struct {
 	database string
 
 	store	*sql.DB
-	indexes	map[string]*Index
 	Sugar	*zap.SugaredLogger
 }
 
@@ -37,21 +36,15 @@ const (
 	// This space intentionally left blank for facilitating vimdiff
 	// acrosss storages.
 
-	getCellSQL          = "SELECT added_at, row_key, column_name, ref_key, body,created_at FROM cell WHERE row_key = ? AND column_name = ? AND ref_key = ? LIMIT 1"
 	getCellLatestSQL    = "SELECT added_at, row_key, column_name, ref_key, body, created_at FROM cell WHERE row_key = ? AND column_name = ? ORDER BY ref_key DESC LIMIT 1"
-	putCellSQL          = "INSERT INTO cell ( row_key, column_name, ref_key, body ) VALUES(?, ?, ?, ?)"
+	getCellsLatestSQL	= "SELECT added_at, row_key, column_name, ref_key, body, created_at FROM (SELECT * FROM %s ORDER BY %s, %s ASC) GROUP BY %s"
+	joinTableSQL		= "%s INNER JOIN %s ON %s.row_key = %s.row_key"
+	joinTableFilterSQL	= "%s INNER JOIN %s ON %s.row_key = %s.row_key WHERE %s = ?"
+	putCellSQL          = "INSERT INTO cell (row_key, column_name, ref_key, body) VALUES(?, ?, ?, ?)"
 	insertIndexSQL		= "INSERT INTO %s (row_key, %s) VALUES (?, ?) ON DUPLICATE KEY UPDATE %s = ?"
 	queryIndexSQL		= "SELECT row_key FROM %s WHERE %s %s ?"
 	queryIndexAllSQL	= "SELECT row_key FROM %s"
 )
-
-func exec(db *sql.DB, sqlStr string) error {
-	_, err := db.Exec(sqlStr)
-	if err != nil {
-		return err
-	}
-	return nil
-}
 
 // New returns a new mysql-backed Storage
 func New() *Storage {
@@ -74,8 +67,6 @@ func (s *Storage) Open() error {
 		return err
 	}
 	s.store = db
-
-	s.indexes = make(map[string]*Index)
 	return nil
 }
 
@@ -102,48 +93,6 @@ func (s *Storage) WithPort(port string) *Storage {
 func (s *Storage) WithDatabase(database string) *Storage {
 	s.database = database
 	return s
-}
-
-func (s *Storage) GetCell(ctx context.Context, rowKey []byte, columnKey string, refKey int64) (cell models.Cell, found bool, err error) {
-	var (
-		resAddedAt   int64
-		resRowKey    []byte
-		resColName   string
-		resRefKey    int64
-		resBody      []byte
-		resCreatedAt *time.Time
-		rows         *sql.Rows
-	)
-	s.Sugar.Infow("GetCell", "query", getCellSQL, "rowKey", rowKey, "columnKey", columnKey, "refKey", refKey)
-	rows, err = s.store.QueryContext(ctx, getCellSQL, rowKey, columnKey, refKey)
-	if err != nil {
-		return
-	}
-	defer rows.Close()
-
-	found = false
-	for rows.Next() {
-		err = rows.Scan(&resAddedAt, &resRowKey, &resColName, &resRefKey, &resBody, &resCreatedAt)
-		if err != nil {
-			return
-		}
-		s.Sugar.Infow("GetCell scanned data", "AddedAt", resAddedAt, "RowKey", resRowKey, "ColName", resColName, "RefKey", resRefKey, "Body", resBody, "CreatedAt", resCreatedAt)
-
-		cell.AddedAt = resAddedAt
-		cell.RowKey = resRowKey
-		cell.ColumnName = resColName
-		cell.RefKey = resRefKey
-		cell.Body = resBody
-		cell.CreatedAt = resCreatedAt
-		found = true
-	}
-
-	err = rows.Err()
-	if err != nil {
-		return
-	}
-
-	return cell, found, nil
 }
 
 func (s *Storage) GetCellLatest(ctx context.Context, rowKey []byte, columnKey string) (cell models.Cell, found bool, err error) {
@@ -191,9 +140,7 @@ func (s *Storage) GetCellLatest(ctx context.Context, rowKey []byte, columnKey st
 
 func (s *Storage) GetCellsByColumnLatest(ctx context.Context, columnKey string) (cells []models.Cell, found bool, err error) {
 	// Add Index table if not exist
-	table := s.getIndex(columnKey, "id")
-
-	rowKeys := table.QueryAll(ctx)
+	rowKeys := QueryAll(ctx, s.store, columnKey, "id")
 	if len(rowKeys) == 0 {
 		return cells, false, nil
 	}
@@ -204,31 +151,63 @@ func (s *Storage) GetCellsByColumnLatest(ctx context.Context, columnKey string) 
 		cells = append(cells, cell)
 	}
 	return cells, true, nil
+}
+
+func (s *Storage) GetCellByUniqueFieldLatest(ctx context.Context, columnKey string, field string, value interface{}) (cell models.Cell, found bool, err error) {
+	// Add Index table if not exist
+	rowKeys := QueryByField(ctx, s.store, columnKey, field, value, "=")
+	if len(rowKeys) == 0 {
+		return cell, false, nil
+	}
+	if len(rowKeys) > 1 {
+		panic(errors.New("field value not unique"))
+	}
+
+	return s.GetCellLatest(ctx, rowKeys[0], columnKey)
 }
 
 func (s *Storage) GetCellsByFieldLatest(ctx context.Context, columnKey string, field string, value interface{}, operator string) (cells []models.Cell, found bool, err error) {
-	// Add Index table if not exist
-	table := s.getIndex(columnKey, field)
-
-	rowKeys := table.QueryByField(ctx, value, operator)
-	if len(rowKeys) == 0 {
-		return cells, false, nil
+	var (
+		resAddedAt   int64
+		resRowKey    []byte
+		resColName   string
+		resRefKey    int64
+		resBody      []byte
+		resCreatedAt *time.Time
+		cell models.Cell
+		rows         *sql.Rows
+	)
+	indexTable := utils.IndexTableName(columnKey, field)
+	joinStmt := fmt.Sprintf(joinTableFilterSQL, "cell", indexTable, "cell", indexTable, field)
+	queryStmt := fmt.Sprintf(getCellsLatestSQL, joinStmt, "row_key", "ref_key", "row_key")
+	rows, err = s.store.QueryContext(ctx, queryStmt, value)
+	if err != nil {
+		return nil, false, err
 	}
+	defer rows.Close()
 
-	for _, rowKey := range rowKeys {
-		cell, _, err := s.GetCellLatest(ctx, rowKey, columnKey)
-		utils.CheckErr(err)
+	found = false
+	for rows.Next() {
+		err = rows.Scan(&resAddedAt, &resRowKey, &resColName, &resRefKey, &resBody, &resCreatedAt)
+		if err != nil {
+			return
+		}
+		s.Sugar.Infow("GetCellLatest scanned data", "AddedAt", resAddedAt, "RowKey", resRowKey, "ColName", resColName, "RefKey", resRefKey, "Body", resBody, "CreatedAt", resCreatedAt)
+
+		cell.AddedAt = resAddedAt
+		cell.RowKey = resRowKey
+		cell.ColumnName = resColName
+		cell.RefKey = resRefKey
+		cell.Body = resBody
+		cell.CreatedAt = resCreatedAt
 		cells = append(cells, cell)
+		found = true
 	}
-	return cells, true, nil
+	return cells, found, nil
 }
 
 func (s *Storage) CheckValueExist(ctx context.Context, columnKey string, field string, value interface{}) (found bool, err error) {
-	table := s.getIndex(columnKey, field)
-	if table == nil {
-		return false, errors.New("invalid field")
-	}
-	return table.CheckValueExist(ctx, value), nil
+	return CheckValueExist(ctx, s.store, columnKey, field, value), nil
 }
 
 func (s *Storage) putAllIndex(ctx context.Context, rowKey []byte, columnKey string, cell models.Cell, ignore_fields ...string) {
@@ -243,25 +222,9 @@ func (s *Storage) putAllIndex(ctx context.Context, rowKey []byte, columnKey stri
 
 	for field, value := range body {
 		if _, ok := ignore_fields_[field]; !ok {
-			table := s.AddIndex(columnKey, field)
-			table.PutIndex(ctx, rowKey, value)
+			PutIndex(ctx, s.store, columnKey, field, rowKey, value)
 		}
 	}
-}
-
-func (s *Storage) AddIndex(columnKey string, field string) *Index {
-	tableName := utils.IndexTableName(columnKey, field)
-	if _, ok := s.indexes[tableName]; !ok {
-		s.indexes[tableName] = NewIndex(columnKey, field, s.store)
-	}
-	table, _ := s.indexes[tableName]
-	return table
-}
-
-func (s *Storage) getIndex(columnKey string, field string) *Index {
-	tableName := utils.IndexTableName(columnKey, field)
-	table, _ := s.indexes[tableName]
-	return table
 }
 
 func (s *Storage) PutCell(ctx context.Context, rowKey []byte, columnKey string, refKey int64, cell models.Cell, ignore_fileds ...string) (err error) {
