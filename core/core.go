@@ -104,7 +104,9 @@ func (kv *KVStore) GetCellByUniqueFieldLatest(ctx context.Context, columnKey str
 			cell = cell_
 		}
 	}
-
+	if count > 0 {
+		found = true
+	}
 	return cell, found, nil
 }
 
