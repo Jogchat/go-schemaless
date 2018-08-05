@@ -8,6 +8,7 @@ import (
 	"sync"
 	"code.jogchat.internal/dgryski-go-metro"
 	"code.jogchat.internal/golang_backend/utils"
+	"errors"
 )
 
 // KVStore is a sharded key-value store
@@ -59,30 +60,6 @@ func New(shards []Shard) *KVStore {
 	return kv
 }
 
-func (kv *KVStore) GetCell(ctx context.Context, rowKey []byte, columnKey string, refKey int64) (cell models.Cell, found bool, err error) {
-	var storage *mysql.Storage
-	var migStorage *mysql.Storage
-
-	kv.mu.RLock()
-	defer kv.mu.RUnlock()
-
-	if kv.migration != nil {
-		shard := kv.migration.Choose(string(rowKey))
-		migStorage = kv.mstorages[shard]
-	}
-	shard := kv.continuum.Choose(string(rowKey))
-	storage = kv.storages[shard]
-
-	if migStorage != nil {
-		val, ok, err := (*migStorage).GetCell(ctx, rowKey, columnKey, refKey)
-		if ok {
-			return val, ok, err
-		}
-	}
-
-	return (*storage).GetCell(ctx, rowKey, columnKey, refKey)
-}
-
 func (kv *KVStore) GetCellLatest(ctx context.Context, rowKey []byte, columnKey string) (cell models.Cell, found bool, err error) {
 	var storage *mysql.Storage
 	var migStorage *mysql.Storage
@@ -111,13 +88,27 @@ func (kv *KVStore) GetCellLatest(ctx context.Context, rowKey []byte, columnKey s
 	return (*storage).GetCellLatest(ctx, rowKey, columnKey)
 }
 
-func (kv *KVStore) GetCellsByFieldLatest(ctx context.Context, columnKey string, field string, value interface{}, operator string) (cells []models.Cell, found bool, err error) {
-	kv.mu.Lock()
-	for _, storage := range kv.storages {
-		storage.AddIndex(columnKey, field)
-	}
-	kv.mu.Unlock()
+func (kv *KVStore) GetCellByUniqueFieldLatest(ctx context.Context, columnKey string, field string, value interface{}) (cell models.Cell, found bool, err error) {
+	kv.mu.RLock()
+	defer kv.mu.RUnlock()
 
+	count := 0
+	for _, storage := range kv.storages {
+		cell_, found, err := (*storage).GetCellByUniqueFieldLatest(ctx, columnKey, field, value)
+		if found {
+			utils.CheckErr(err)
+			count += 1
+			if count > 1 {
+				return cell, false, errors.New("not unique field")
+			}
+			cell = cell_
+		}
+	}
+
+	return cell, found, nil
+}
+
+func (kv *KVStore) GetCellsByFieldLatest(ctx context.Context, columnKey string, field string, value interface{}, operator string) (cells []models.Cell, found bool, err error) {
 	kv.mu.RLock()
 	defer kv.mu.RUnlock()
 
@@ -137,12 +128,6 @@ func (kv *KVStore) GetCellsByFieldLatest(ctx context.Context, columnKey string, 
 }
 
 func (kv *KVStore) GetCellsByColumnLatest(ctx context.Context, columnKey string) (cells []models.Cell, found bool, err error) {
-	kv.mu.Lock()
-	for _, storage := range kv.storages {
-		storage.AddIndex(columnKey, "id")
-	}
-	kv.mu.Unlock()
-
 	kv.mu.RLock()
 	defer kv.mu.RUnlock()
 
@@ -163,12 +148,6 @@ func (kv *KVStore) GetCellsByColumnLatest(ctx context.Context, columnKey string)
 
 // Caution: if checking duplicate UUID, convert UUID to byte array before passing it to value
 func (kv *KVStore) CheckValueExist(ctx context.Context, columnKey string, field string, value interface{}) (exist bool, err error) {
-	kv.mu.Lock()
-	for _, storage := range kv.storages {
-		storage.AddIndex(columnKey, field)
-	}
-	kv.mu.Unlock()
-
 	kv.mu.RLock()
 	defer kv.mu.RUnlock()
 

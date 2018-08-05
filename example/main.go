@@ -44,13 +44,13 @@ func main() {
 	err = dataStore.PutCell(context.TODO(), Yahoo.RowKey, Yahoo.ColumnName, Yahoo.RefKey, Yahoo)
 	utils.CheckErr(err)
 
-	cells, _, err := dataStore.GetCellsByFieldLatest(context.TODO(), "schools", "domain", "illinois.edu")
+	cells, _, err := dataStore.GetCellsByFieldLatest(context.TODO(), "schools", "domain", "illinois.edu", "=")
 	utils.CheckErr(err)
 	for _, cell := range cells {
 		fmt.Println(cell.String())
 	}
 
-	cells, _, err = dataStore.GetCellsByFieldLatest(context.TODO(), "companies", "domain", "yahoo-inc.com")
+	cells, _, err = dataStore.GetCellsByFieldLatest(context.TODO(), "companies", "domain", "yahoo-inc.com", "=")
 	utils.CheckErr(err)
 	for _, cell := range cells {
 		fmt.Println(cell.String())
