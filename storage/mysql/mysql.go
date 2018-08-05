@@ -34,10 +34,11 @@ const (
 	// This space intentionally left blank for facilitating vimdiff
 	// acrosss storages.
 
-	getCellLatestSQL    = "SELECT added_at, row_key, column_name, ref_key, body, created_at FROM cell WHERE row_key = ? AND column_name = ? ORDER BY ref_key DESC LIMIT 1"
-	getCellsLatestSQL	= "SELECT added_at, row_key, column_name, ref_key, body, created_at FROM (SELECT * FROM %s ORDER BY %s, %s ASC) GROUP BY %s"
-	joinTableSQL		= "%s INNER JOIN %s ON %s.row_key = %s.row_key"
-	joinTableFilterSQL	= "%s INNER JOIN %s ON %s.row_key = %s.row_key WHERE %s = ?"
+	getCellLatestSQL    = "SELECT added_at, row_key, column_name, ref_key, body, created_at FROM cell " +
+		"WHERE row_key = ? AND column_name = ? ORDER BY ref_key DESC LIMIT 1"
+	getCellsLatestSQL	= "SELECT added_at, cell.row_key, column_name, ref_key, body, created_at FROM (cell RIGHT JOIN %s ON cell.row_key = %s.row_key) " +
+		"WHERE %s (cell.row_key, ref_key) IN (SELECT row_key, MAX(ref_key) FROM cell GROUP BY row_key);"
+	getCellsFileterSQL	= "%s = ? AND"
 	putCellSQL          = "INSERT INTO cell (row_key, column_name, ref_key, body) VALUES(?, ?, ?, ?)"
 	insertIndexSQL		= "INSERT INTO %s (row_key, %s) VALUES (?, ?) ON DUPLICATE KEY UPDATE %s = ?"
 	queryIndexSQL		= "SELECT row_key FROM %s WHERE %s %s ?"
@@ -49,23 +50,17 @@ func New() *Storage {
 	return new(Storage)
 }
 
-func (s *Storage) WithZap() error {
+func (s *Storage) WithZap() {
 	logger, err := zap.NewProduction()
-	if err != nil {
-		return err
-	}
+	utils.CheckErr(err)
 	sug := logger.Sugar()
 	s.Sugar = sug
-	return nil
 }
 
-func (s *Storage) Open() error {
+func (s *Storage) Open() {
 	db, err := sql.Open(driver, fmt.Sprintf(dsnFormat, s.user, s.pass, s.host, s.port, s.database))
-	if err != nil {
-		return err
-	}
+	utils.CheckErr(err)
 	s.store = db
-	return nil
 }
 
 func (s *Storage) WithUser(user string) *Storage {
@@ -106,17 +101,13 @@ func (s *Storage) GetCellLatest(ctx context.Context, rowKey []byte, columnKey st
 	s.Sugar.Infow("GetCellLatest", "query before", getCellLatestSQL, "rowKey", rowKey, "columnKey", columnKey)
 	rows, err = s.store.QueryContext(ctx, getCellLatestSQL, rowKey, columnKey)
 	s.Sugar.Infow("GetCellLatest", "query after", getCellLatestSQL, "rowKey", rowKey, "columnKey", columnKey, "rows", rows, "error", err)
-	if err != nil {
-		return
-	}
+	utils.CheckErr(err)
 	defer rows.Close()
 
 	found = false
 	for rows.Next() {
 		err = rows.Scan(&resAddedAt, &resRowKey, &resColName, &resRefKey, &resBody, &resCreatedAt)
-		if err != nil {
-			return
-		}
+		utils.CheckErr(err)
 		s.Sugar.Infow("GetCellLatest scanned data", "AddedAt", resAddedAt, "RowKey", resRowKey, "ColName", resColName, "RefKey", resRefKey, "Body", resBody, "CreatedAt", resCreatedAt)
 
 		cell.AddedAt = resAddedAt
@@ -129,10 +120,7 @@ func (s *Storage) GetCellLatest(ctx context.Context, rowKey []byte, columnKey st
 	}
 
 	err = rows.Err()
-	if err != nil {
-		return
-	}
-
+	utils.CheckErr(err)
 	return cell, found, nil
 }
 
@@ -148,20 +136,15 @@ func (s *Storage) GetCellsByColumnLatest(ctx context.Context, columnKey string) 
 		rows         *sql.Rows
 	)
 	indexTable := utils.IndexTableName(columnKey, "id")
-	joinStmt := fmt.Sprintf(joinTableSQL, "cell", indexTable, "cell", indexTable)
-	queryStmt := fmt.Sprintf(getCellsLatestSQL, joinStmt, "row_key", "ref_key", "row_key")
+	queryStmt := fmt.Sprintf(getCellsLatestSQL, indexTable, indexTable, "")
 	rows, err = s.store.QueryContext(ctx, queryStmt)
-	if err != nil {
-		return nil, false, err
-	}
+	utils.CheckErr(err)
 	defer rows.Close()
 
 	found = false
 	for rows.Next() {
 		err = rows.Scan(&resAddedAt, &resRowKey, &resColName, &resRefKey, &resBody, &resCreatedAt)
-		if err != nil {
-			return
-		}
+		utils.CheckErr(err)
 		cell.AddedAt = resAddedAt
 		cell.RowKey = resRowKey
 		cell.ColumnName = resColName
@@ -199,20 +182,16 @@ func (s *Storage) GetCellsByFieldLatest(ctx context.Context, columnKey string, f
 		rows         *sql.Rows
 	)
 	indexTable := utils.IndexTableName(columnKey, field)
-	joinStmt := fmt.Sprintf(joinTableFilterSQL, "cell", indexTable, "cell", indexTable, field)
-	queryStmt := fmt.Sprintf(getCellsLatestSQL, joinStmt, "row_key", "ref_key", "row_key")
+	filterStmt := fmt.Sprintf(getCellsFileterSQL, field)
+	queryStmt := fmt.Sprintf(getCellsLatestSQL, indexTable, indexTable, filterStmt)
 	rows, err = s.store.QueryContext(ctx, queryStmt, value)
-	if err != nil {
-		return nil, false, err
-	}
+	utils.CheckErr(err)
 	defer rows.Close()
 
 	found = false
 	for rows.Next() {
 		err = rows.Scan(&resAddedAt, &resRowKey, &resColName, &resRefKey, &resBody, &resCreatedAt)
-		if err != nil {
-			return
-		}
+		utils.CheckErr(err)
 		cell.AddedAt = resAddedAt
 		cell.RowKey = resRowKey
 		cell.ColumnName = resColName
@@ -249,25 +228,17 @@ func (s *Storage) putAllIndex(ctx context.Context, rowKey []byte, columnKey stri
 func (s *Storage) PutCell(ctx context.Context, rowKey []byte, columnKey string, refKey int64, cell models.Cell, ignore_fileds ...string) (err error) {
 	var stmt *sql.Stmt
 	stmt, err = s.store.PrepareContext(ctx, putCellSQL)
-	if err != nil {
-		return
-	}
+	utils.CheckErr(err)
 	var res sql.Result
 	s.Sugar.Infow("PutCell", "rowKey", rowKey, "columnKey", columnKey, "refKey", refKey, "Body", cell.Body)
 	res, err = stmt.Exec(rowKey, columnKey, refKey, cell.Body)
-	if err != nil {
-		return
-	}
+	utils.CheckErr(err)
 	var lastID int64
 	lastID, err = res.LastInsertId()
-	if err != nil {
-		return
-	}
+	utils.CheckErr(err)
 	var rowCnt int64
 	rowCnt, err = res.RowsAffected()
-	if err != nil {
-		return
-	}
+	utils.CheckErr(err)
 	// TODO(rbastic): Should we side-affect the cell and record the AddedAt?
 	s.Sugar.Infof("ID = %d, affected = %d\n", lastID, rowCnt)
 

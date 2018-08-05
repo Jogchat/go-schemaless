@@ -16,10 +16,8 @@ func newBackend(user, pass, host, port, schemaName string) *mysql.Storage {
 		WithPort(port).
 		WithDatabase(schemaName)
 
-	err := m.WithZap()
-	utils.CheckErr(err)
-	err = m.Open()
-	utils.CheckErr(err)
+	m.WithZap()
+	m.Open()
 
 	// TODO(rbastic): defer Sync() on all backend storage loggers
 	return m
