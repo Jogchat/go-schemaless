@@ -98,9 +98,8 @@ func (s *Storage) GetCellLatest(ctx context.Context, rowKey []byte, columnKey st
 		resCreatedAt *time.Time
 		rows         *sql.Rows
 	)
-	s.Sugar.Infow("GetCellLatest", "query before", getCellLatestSQL, "rowKey", rowKey, "columnKey", columnKey)
+	s.Sugar.Infow("GetCellLatest", "query ", getCellLatestSQL, "rowKey", rowKey, "columnKey", columnKey)
 	rows, err = s.store.QueryContext(ctx, getCellLatestSQL, rowKey, columnKey)
-	s.Sugar.Infow("GetCellLatest", "query after", getCellLatestSQL, "rowKey", rowKey, "columnKey", columnKey, "rows", rows, "error", err)
 	utils.CheckErr(err)
 	defer rows.Close()
 
@@ -108,8 +107,6 @@ func (s *Storage) GetCellLatest(ctx context.Context, rowKey []byte, columnKey st
 	for rows.Next() {
 		err = rows.Scan(&resAddedAt, &resRowKey, &resColName, &resRefKey, &resBody, &resCreatedAt)
 		utils.CheckErr(err)
-		s.Sugar.Infow("GetCellLatest scanned data", "AddedAt", resAddedAt, "RowKey", resRowKey, "ColName", resColName, "RefKey", resRefKey, "Body", resBody, "CreatedAt", resCreatedAt)
-
 		cell.AddedAt = resAddedAt
 		cell.RowKey = resRowKey
 		cell.ColumnName = resColName
