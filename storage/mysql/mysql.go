@@ -38,7 +38,7 @@ const (
 		"WHERE row_key = ? AND column_name = ? ORDER BY ref_key DESC LIMIT 1"
 	getCellsLatestSQL	= "SELECT added_at, cell.row_key, column_name, ref_key, body, created_at FROM (cell RIGHT JOIN %s ON cell.row_key = %s.row_key) " +
 		"WHERE %s (cell.row_key, ref_key) IN (SELECT row_key, MAX(ref_key) FROM cell GROUP BY row_key);"
-	getCellsFileterSQL	= "%s = ? AND"
+	getCellsFileterSQL	= "%s %s ? AND"
 	putCellSQL          = "INSERT INTO cell (row_key, column_name, ref_key, body) VALUES(?, ?, ?, ?)"
 	insertIndexSQL		= "INSERT INTO %s (row_key, %s) VALUES (?, ?) ON DUPLICATE KEY UPDATE %s = ?"
 	queryIndexSQL		= "SELECT row_key FROM %s WHERE %s %s ?"
@@ -179,7 +179,7 @@ func (s *Storage) GetCellsByFieldLatest(ctx context.Context, columnKey string, f
 		rows         *sql.Rows
 	)
 	indexTable := utils.IndexTableName(columnKey, field)
-	filterStmt := fmt.Sprintf(getCellsFileterSQL, field)
+	filterStmt := fmt.Sprintf(getCellsFileterSQL, field, operator)
 	queryStmt := fmt.Sprintf(getCellsLatestSQL, indexTable, indexTable, filterStmt)
 	rows, err = s.store.QueryContext(ctx, queryStmt, value)
 	utils.CheckErr(err)
