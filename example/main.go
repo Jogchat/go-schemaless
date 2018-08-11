@@ -50,7 +50,7 @@ func main() {
 		fmt.Println(cell.String())
 	}
 
-	cells, _, err = dataStore.GetCellsByFieldLatest(context.TODO(), "companies", "domain", "yahoo-inc.com", "=")
+	cells, _, err = dataStore.GetCellsByColumnLatest(context.TODO(), "companies")
 	utils.CheckErr(err)
 	for _, cell := range cells {
 		fmt.Println(cell.String())
