@@ -30,16 +30,18 @@ const (
 	driver = "mysql"
 	dsnFormat = "%s:%s@tcp(%s:%s)/%s?parseTime=true"
 
+	// must provide row_key and column_name
 	getCellLatestSQL    		= "SELECT added_at, row_key, column_name, ref_key, body, created_at FROM cell " +
 		"WHERE row_key = ? AND column_name = ? ORDER BY ref_key DESC LIMIT 1"
+	// get all latest cells with a specific column name
 	getCellsByColumnLatestSQL	= "SELECT added_at, row_key, column_name, ref_key, body, created_at FROM cell " +
 		"WHERE column_name = ? AND (row_key, ref_key) IN (SELECT row_key, MAX(ref_key) FROM cell GROUP BY row_key);"
+	// get all latest cells with a specific value from column
 	getCellsByFieldLatestSQL	= "SELECT added_at, cell.row_key, column_name, ref_key, body, created_at FROM (cell RIGHT JOIN %s ON cell.row_key = %s.row_key) " +
 		"WHERE %s %s ? AND (cell.row_key, ref_key) IN (SELECT row_key, MAX(ref_key) FROM cell GROUP BY row_key);"
 	putCellSQL          		= "INSERT INTO cell (row_key, column_name, ref_key, body) VALUES(?, ?, ?, ?)"
 	insertIndexSQL				= "INSERT INTO %s (row_key, %s) VALUES (?, ?) ON DUPLICATE KEY UPDATE %s = ?"
 	queryIndexSQL				= "SELECT row_key FROM %s WHERE %s %s ?"
-	queryIndexAllSQL			= "SELECT row_key FROM %s"
 )
 
 // New returns a new mysql-backed Storage
@@ -118,6 +120,7 @@ func (s *Storage) GetCellLatest(ctx context.Context, rowKey []byte, columnKey st
 	return cell, found, nil
 }
 
+// get all latest cells with a specific column name
 func (s *Storage) GetCellsByColumnLatest(ctx context.Context, columnKey string) (cells []models.Cell, found bool, err error) {
 	var (
 		resAddedAt   int64
@@ -150,6 +153,7 @@ func (s *Storage) GetCellsByColumnLatest(ctx context.Context, columnKey string) 
 	return cells, found, nil
 }
 
+// get cell with specific field, cell must be uniquely identified by field
 func (s *Storage) GetCellByUniqueFieldLatest(ctx context.Context, columnKey string, field string, value interface{}) (cell models.Cell, found bool, err error) {
 	// Add Index table if not exist
 	rowKeys := QueryByField(ctx, s.store, columnKey, field, value, "=")
@@ -163,6 +167,7 @@ func (s *Storage) GetCellByUniqueFieldLatest(ctx context.Context, columnKey stri
 	return s.GetCellLatest(ctx, rowKeys[0], columnKey)
 }
 
+// get all latest cells with a specific value from column
 func (s *Storage) GetCellsByFieldLatest(ctx context.Context, columnKey string, field string, value interface{}, operator string) (cells []models.Cell, found bool, err error) {
 	var (
 		resAddedAt   int64
@@ -196,10 +201,12 @@ func (s *Storage) GetCellsByFieldLatest(ctx context.Context, columnKey string, f
 	return cells, found, nil
 }
 
+// check if cell with certain field exist in the database by querying index table of given column
 func (s *Storage) CheckValueExist(ctx context.Context, columnKey string, field string, value interface{}) (found bool, err error) {
 	return CheckValueExist(ctx, s.store, columnKey, field, value), nil
 }
 
+// helper function used when inserting cells, insert to or update index table when inserting cells
 func (s *Storage) putAllIndex(ctx context.Context, rowKey []byte, columnKey string, cell models.Cell, ignore_fields ...string) {
 	var body map[string]interface{}
 	err := json.Unmarshal(cell.Body, &body)
@@ -234,6 +241,7 @@ func (s *Storage) PutCell(ctx context.Context, rowKey []byte, columnKey string, 
 	// TODO(rbastic): Should we side-affect the cell and record the AddedAt?
 	s.Sugar.Infof("ID = %d, affected = %d\n", lastID, rowCnt)
 
+	// don't forget to propagate changes to index tables
 	s.putAllIndex(ctx, rowKey, columnKey, cell, ignore_fileds...)
 	return
 }

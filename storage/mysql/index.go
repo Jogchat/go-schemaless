@@ -15,16 +15,10 @@ func PutIndex(ctx context.Context, conn *sql.DB, column string, field string, ro
 	utils.CheckErr(err)
 }
 
+// Query index table specified by column and field name, return a list of row_key
 func QueryByField(ctx context.Context, conn *sql.DB, column string, field string, value interface{}, operator string) [][]byte {
 	stmt := fmt.Sprintf(queryIndexSQL, utils.IndexTableName(column, field), field, operator)
 	rows, err := conn.QueryContext(ctx, stmt, value)
-	utils.CheckErr(err)
-	return extractRowKeys(rows)
-}
-
-func QueryAll(ctx context.Context, conn *sql.DB, column string, field string) [][]byte {
-	stmt := fmt.Sprintf(queryIndexAllSQL, utils.IndexTableName(column, field))
-	rows, err := conn.QueryContext(ctx, stmt)
 	utils.CheckErr(err)
 	return extractRowKeys(rows)
 }
@@ -37,6 +31,7 @@ func CheckValueExist(ctx context.Context, conn *sql.DB, column string, field str
 	return results.Next()
 }
 
+// extract a list of row_key
 func extractRowKeys(rows *sql.Rows) [][]byte {
 	var rowKeys [][]byte
 	for rows.Next() {

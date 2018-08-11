@@ -88,6 +88,7 @@ func (kv *KVStore) GetCellLatest(ctx context.Context, rowKey []byte, columnKey s
 	return (*storage).GetCellLatest(ctx, rowKey, columnKey)
 }
 
+// get cell with specific field, cell must be uniquely identified by field
 func (kv *KVStore) GetCellByUniqueFieldLatest(ctx context.Context, columnKey string, field string, value interface{}) (cell models.Cell, found bool, err error) {
 	kv.mu.RLock()
 	defer kv.mu.RUnlock()
@@ -110,6 +111,7 @@ func (kv *KVStore) GetCellByUniqueFieldLatest(ctx context.Context, columnKey str
 	return cell, found, nil
 }
 
+// get all latest cells with a specific value from column
 func (kv *KVStore) GetCellsByFieldLatest(ctx context.Context, columnKey string, field string, value interface{}, operator string) (cells []models.Cell, found bool, err error) {
 	kv.mu.RLock()
 	defer kv.mu.RUnlock()
@@ -129,6 +131,7 @@ func (kv *KVStore) GetCellsByFieldLatest(ctx context.Context, columnKey string, 
 	return cells, found, nil
 }
 
+// get all latest cells with a specific column name
 func (kv *KVStore) GetCellsByColumnLatest(ctx context.Context, columnKey string) (cells []models.Cell, found bool, err error) {
 	kv.mu.RLock()
 	defer kv.mu.RUnlock()
