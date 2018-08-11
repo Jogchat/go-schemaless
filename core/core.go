@@ -172,7 +172,7 @@ func (kv *KVStore) CheckValueExist(ctx context.Context, columnKey string, field 
 	return exist, err
 }
 
-// PutCell
+// insert cell, remember to pass in all fields that you do not want to index on
 func (kv *KVStore) PutCell(ctx context.Context, rowKey []byte, columnKey string, refKey int64, cell models.Cell, ignore_fields ...string) error {
 	var storage *mysql.Storage
 

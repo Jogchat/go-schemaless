@@ -224,6 +224,7 @@ func (s *Storage) putAllIndex(ctx context.Context, rowKey []byte, columnKey stri
 	}
 }
 
+// insert cell, remember to pass in all fields that you do not want to index on
 func (s *Storage) PutCell(ctx context.Context, rowKey []byte, columnKey string, refKey int64, cell models.Cell, ignore_fileds ...string) (err error) {
 	var stmt *sql.Stmt
 	stmt, err = s.store.PrepareContext(ctx, putCellSQL)
