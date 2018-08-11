@@ -25,6 +25,7 @@ func newBusiness(id uuid.UUID, colKey string, domain string, name string) models
 	return models.Cell{RowKey: rowKey, ColumnName: colKey, RefKey: refKey, Body: blob}
 }
 
+// run this to make sure nothing breaks
 func main() {
 	dataStore := schemaless.InitDataStore()
 	defer dataStore.Destroy(context.TODO())
