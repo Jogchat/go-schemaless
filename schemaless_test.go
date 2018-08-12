@@ -1,15 +1,15 @@
-package main
+package schemaless
 
 import (
 	"context"
-
 	"code.jogchat.internal/go-schemaless/utils"
 	"github.com/satori/go.uuid"
 	"encoding/json"
 	"fmt"
 	"code.jogchat.internal/go-schemaless/models"
 	"time"
-	"code.jogchat.internal/go-schemaless"
+	"testing"
+	"github.com/stretchr/testify/assert"
 )
 
 
@@ -26,8 +26,10 @@ func newBusiness(id uuid.UUID, colKey string, domain string, name string) models
 }
 
 // run this to make sure nothing breaks
-func main() {
-	dataStore := schemaless.InitDataStore()
+func TestSchemaless(t *testing.T) {
+	assert := assert.New(t)
+
+	dataStore := InitDataStore()
 	defer dataStore.Destroy(context.TODO())
 
 	UIUC := newBusiness(utils.NewUUID(), "schools", "illinois.edu", "UIUC")
@@ -45,15 +47,24 @@ func main() {
 	err = dataStore.PutCell(context.TODO(), Yahoo.RowKey, Yahoo.ColumnName, Yahoo.RefKey, Yahoo)
 	utils.CheckErr(err)
 
+	var body map[string]interface{}
+
 	cells, _, err := dataStore.GetCellsByFieldLatest(context.TODO(), "schools", "domain", "illinois.edu", "=")
 	utils.CheckErr(err)
+	assert.Equal(len(cells), 1)
 	for _, cell := range cells {
+		err := json.Unmarshal(cell.Body, &body)
+		utils.CheckErr(err)
+		assert.Equal(body["name"], "UIUC")
+		assert.Equal(body["domain"], "illinois.edu")
 		fmt.Println(cell.String())
 	}
 
 	cells, _, err = dataStore.GetCellsByColumnLatest(context.TODO(), "companies")
 	utils.CheckErr(err)
+	assert.Equal(len(cells), 2)
 	for _, cell := range cells {
+		assert.Equal(cell.ColumnName, "companies")
 		fmt.Println(cell.String())
 	}
 }
